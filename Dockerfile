@@ -11,12 +11,13 @@ COPY ospray-${ospray_version}.x86_64.linux.tar.gz /tmp/
 RUN tar xvf /tmp/ospray-${ospray_version}.x86_64.linux.tar.gz --strip-components=1 -C /usr/
 
 RUN python3.7 -m pip install \
-        numpy
+        Pillow
 
 WORKDIR /opt/app
 
 COPY server.c ./
 RUN make server \
+        CFLAGS='-pedantic -Wall -Werror' \
         LDLIBS='-lospray'
 
 ENTRYPOINT []
