@@ -32,5 +32,9 @@ CMD []
 
 FROM base AS dist
 
-ENTRYPOINT []
+WORKDIR /opt/app
+COPY server.py ./
+COPY static ./static
+
+ENTRYPOINT ["python3.7", "-u", "server.py", "--port=8801", "/opt/app/server"]
 CMD []

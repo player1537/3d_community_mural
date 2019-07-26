@@ -15,6 +15,10 @@ interactive=1
 script=
 port=8801
 
+if [ -f env.sh ]; then
+	. env.sh
+fi
+
 build() {
 	docker build \
 		${target:+--target $target} \
@@ -67,6 +71,16 @@ destroy() {
 
 logs() {
 	docker service logs $name "$@"
+}
+
+python3.7() { run python3.7 -u "$@"; }
+python3() { python3.7 "$@"; }
+python() { python3 "$@"; }
+server() {
+	python server.py \
+		${port:+--port=$port} \
+		/opt/app/server \
+		"$@"
 }
 
 "$@"
