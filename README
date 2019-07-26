@@ -1,0 +1,25 @@
+==================
+3D Community Mural
+==================
+
+This project includes the server side component to the 3D Community
+Mural project. The 3D aspects come from the use of OSPRay on the
+server side, following a Tapestry-like architecture.
+
+
+How to Run
+----------
+
+Currently there is not a web server frontend. However, to get a single
+image out, you can follow these steps. For convenience, the steps
+have been added to a Makefile, so in simple cases you can just run:
+
+  $ make out.png
+  $ python3 -m http.server 8888
+  $ # open http://localhost:8888/out.png in the browser
+
+Without the Makefile, you would need to run these commands:
+
+  $ ./go.sh build  # Create the Docker image with OSPRay and Python installed
+  $ ./go.sh run /opt/app/server  # Create the out.bin file with raw pixel data
+  $ ./go.sh run python3.7 -u foo.py  # Create out.png from out.bin

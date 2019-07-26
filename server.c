@@ -486,7 +486,7 @@ main(int argc, const char **argv) {
 	back = makePosZGeometry(1.0, 1.0, 1.0);
 	right = makePosXGeometry(1.0, 1.0, 1.0);
 	bottom = makeNegYGeometry(1.0, 1.0, 1.0);
-	front = makeNegZGeometry(1.0, 1.0, 1.5);
+	front = makeNegZGeometry(1.0, 1.0, 1.0);
 	
 	fprintf(info, "Creating Color Materials\n");
 	white = makeBasicMaterial(0.8, 0.8, 0.8);
