@@ -3,3 +3,4 @@
 *.png
 .mk.*
 /env.sh
+ospray-*.linux

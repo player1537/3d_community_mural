@@ -73,6 +73,23 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		ux, uy, uz = map(float, (ux, uy, uz))
 		vx, vy, vz = map(float, (vx, vy, vz))
 		quality = int(quality)
+		
+		bx = by = bz = None
+		
+		it = iter(what.split(','))
+		type = next(it)
+		if type == 'scene':
+			for k in it:
+				if k == 'ball':
+					bx = float(next(it))
+					by = float(next(it))
+					bz = float(next(it))
+				else:
+					print('bad scene type {k!r}')
+					raise NotImplementedError
+		else:
+			print(f'bad type {scene!r}')
+			raise NotImplementedError
 
 		options = {}
 		it = iter(optstring.split(','))
@@ -84,9 +101,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		tile_index = int(tile_index)
 		num_tiles = int(num_tiles)
 		n_cols = int(sqrt(num_tiles))
+		assert bx is not None and by is not None and bz is not None, f'{bx!r} {by!r} {bz!r}'
 		
-		query = b'%f %f %f %f %f %f %f %f %f %d' % (
-			x, y, z, ux, uy, uz, vx, vy, vz, quality,
+		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f' % (
+			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz,
 		)
 		
 		with _g_subprocess.lock:

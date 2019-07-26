@@ -460,7 +460,7 @@ main(int argc, const char **argv) {
 	OSPError err;
 	OSPFrameBuffer frameBuffer;
 	OSPRenderer renderer;
-	OSPModel model;
+	OSPModel boxModel, ballModel;
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
@@ -500,13 +500,16 @@ main(int argc, const char **argv) {
 	mirror = makeMirrorMaterial();
 	
 	fprintf(info, "Creating Ball\n");
-	ball = makeBallGeometry(0.0, 0.0, 0.5, 0.25);
+	ball = makeBallGeometry(0.0, 0.0, 0.0, 0.25);
 	
 	fprintf(info, "Creating Luminous Material\n");
 	luminous = makeLuminousMaterial();
 	
-	fprintf(info, "Creating Model\n");
-	model = ospNewModel();
+	fprintf(info, "Creating Box Model\n");
+	boxModel = ospNewModel();
+	
+	fprintf(info, "Creating Ball Model\n");
+	ballModel = ospNewModel();
 
 	fprintf(info, "Creating Camera\n");
 	camera = ospNewCamera("perspective");
@@ -548,14 +551,17 @@ main(int argc, const char **argv) {
 	ospSetMaterial(ball, mirror);
 	ospCommit(ball);
 	
-	fprintf(info, "Initializing Model\n");
-	ospAddGeometry(model, top);
-	ospAddGeometry(model, left);
-	ospAddGeometry(model, back);
-	ospAddGeometry(model, right);
-	ospAddGeometry(model, bottom);
-	ospAddGeometry(model, ball);
-	ospCommit(model);
+	fprintf(info, "Initializing Box Model\n");
+	ospAddGeometry(boxModel, top);
+	ospAddGeometry(boxModel, left);
+	ospAddGeometry(boxModel, back);
+	ospAddGeometry(boxModel, right);
+	ospAddGeometry(boxModel, bottom);
+	ospCommit(boxModel);
+	
+	fprintf(info, "Initializing Ball Model\n");
+	ospAddGeometry(ballModel, ball);
+	ospCommit(ballModel);
 	
 	fprintf(info, "Initializing Camera\n");
 	ospSet3f(camera, "pos", 0.0, 0.0, 0.1);
@@ -581,7 +587,7 @@ main(int argc, const char **argv) {
 	ospCommit(lights);
 	
 	fprintf(info, "Initializing Renderer\n");
-	ospSetObject(renderer, "model", model);
+	// skipping model; will set later
 	ospSetObject(renderer, "camera", camera);
 	ospSetData(renderer, "lights", lights);
 	ospSet1i(renderer, "spp", 120);
@@ -591,12 +597,16 @@ main(int argc, const char **argv) {
 	
 	fprintf(info, "Entering render loop\n");
 	for (;;) {
+		OSPModel model;
+		OSPGeometry ballTrans, boxTrans;
+		osp_affine3f ballTransform, boxTransform;
 		float px, py, pz, ux, uy, uz, vx, vy, vz;
 		int quality;
+		float bx, by, bz;
 		
 		fprintf(info, "Waiting for request...\n");
 		
-		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality) != 10) {
+		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz) != 13) {
 			fprintf(error, "Error: bad format\n");
 			fprintf(output, "10:error arg,");
 			fflush(output);
@@ -605,14 +615,41 @@ main(int argc, const char **argv) {
 		
 		fprintf(info, "Got request\n");
 		
+		ballTransform.l.vx = (osp_vec3f){ 1, 0, 0 };
+		ballTransform.l.vy = (osp_vec3f){ 0, 1, 0 };
+		ballTransform.l.vz = (osp_vec3f){ 0, 0, 1 };
+		ballTransform.p = (osp_vec3f){ bx, by, bz };
+		
+		boxTransform.l.vx = (osp_vec3f){ 1, 0, 0 };
+		boxTransform.l.vy = (osp_vec3f){ 0, 1, 0 };
+		boxTransform.l.vz = (osp_vec3f){ 0, 0, 1 };
+		boxTransform.p = (osp_vec3f){ 0, 0, 0 };
+
+		ballTrans = ospNewInstance(ballModel, &ballTransform);
+		ospCommit(ballTrans);
+		
+		boxTrans = ospNewInstance(boxModel, &boxTransform);
+		ospCommit(boxTrans);
+		
+		model = ospNewModel();
+		ospAddGeometry(model, ballTrans);
+		ospAddGeometry(model, boxTrans);
+		ospCommit(model);
+		
+		ospSetObject(renderer, "model", model);
+		ospCommit(renderer);
+		
+		ospRelease(model);
+		ospRelease(boxTrans);
+		ospRelease(ballTrans);
+		
 		ospSet3f(camera, "pos", px, py, pz);
 		ospSet3f(camera, "up", ux, uy, uz);
 		ospSet3f(camera, "dir", vx, vy, vz);
 		ospCommit(camera);
 		
-		size = (osp_vec2i){ quality, quality };
-		
 		fprintf(info, "Creating Frame Buffer\n");
+		size = (osp_vec2i){ quality, quality };
 		frameBuffer = ospNewFrameBuffer(&size, OSP_FB_RGBA8, OSP_FB_COLOR);
 		
 		fprintf(info, "Initializing Frame Buffer\n");
