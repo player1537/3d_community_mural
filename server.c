@@ -533,13 +533,13 @@ main(int argc, const char **argv) {
 	ospSetMaterial(left, red);
 	ospCommit(left);
 	
-	ospSetMaterial(back, white);
+	ospSetMaterial(back, blue);
 	ospCommit(back);
 	
 	ospSetMaterial(right, green);
 	ospCommit(right);
 	
-	ospSetMaterial(bottom, white);
+	ospSetMaterial(bottom, yellow);
 	ospCommit(bottom);
 	
 	ospSetMaterial(front, luminous);
@@ -570,7 +570,7 @@ main(int argc, const char **argv) {
 	ospSet2f(camera, "imageStart", 0.0, 0.0);
 	ospSet2f(camera, "imageEnd", 1.0, 1.0);
 	ospSet1f(camera, "height", 1.0);
-	ospSet1f(camera, "fovy", 120);
+	ospSet1f(camera, "fovy", 60);
 	ospSet1f(camera, "aspect", 1.0);
 	ospCommit(camera);
 	

@@ -88,7 +88,7 @@ function makeMuralURL(options) {
 		scene: sceneParts.join(','),
 		px: O.cameraHorizontal,  // camera x
 		py: O.cameraVertical,  // camera y
-		pz: 0.0,  // camera depth
+		pz: -2.0,  // camera depth
 		ux: 0, uy: 1, uz: 0,
 		vx: 0, vy: 0, vz: 1,
 		quality: O.quality,
@@ -108,7 +108,7 @@ const url = makeMuralURL({
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5/0/0/0/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5/0/0/-2/0/1/0/0/0/1/512/
 
 Likewise, we could make the ball move around in a circle in the
 viewport:
