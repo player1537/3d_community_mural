@@ -746,7 +746,7 @@
                 self.scroll_cma = (self.scroll_cma * self.scroll_counter + delta) * 
                     1.0 / (self.scroll_counter + 1);
                 delta = delta_sign * delta / self.scroll_cma;
-                delta *= 30;
+                delta *= 0.03;
                 self.scroll_counter++; // this will grow indefinitely, must fix later
 
                 self.camera.zoomScale -= delta;
