@@ -456,7 +456,7 @@ makeBasicMaterial(float r, float g, float b) {
 
 int
 main(int argc, const char **argv) {
-	FILE *info, *error, *output;
+	FILE *input, *info, *error, *output;
 	OSPError err;
 	OSPFrameBuffer frameBuffer;
 	OSPRenderer renderer;
@@ -469,9 +469,10 @@ main(int argc, const char **argv) {
 	osp_vec2i size;
 	const void *pixels;
 	
-	info = stdout;
-	error = stderr;
-	output = fopen("out.bin", "wb");
+	input = fopen("/dev/stdin", "r");
+	info = fopen("/dev/stdout", "w");
+	error = fopen("/dev/stderr", "w");
+	output = fopen("/dev/fd/100", "wb");
 	
 	fprintf(info, "Initializing OSPRay\n");
 	err = ospInit(&argc, argv);
@@ -521,8 +522,6 @@ main(int argc, const char **argv) {
 
 	fprintf(info, "Creating Renderer\n");
 	renderer = ospNewRenderer("pathtracer");
-
-	size = (osp_vec2i){ 512, 512 };
 	
 	fprintf(info, "Initializing Box\n");
 	ospSetMaterial(top, white);
@@ -550,7 +549,7 @@ main(int argc, const char **argv) {
 	ospCommit(ball);
 	
 	fprintf(info, "Initializing Model\n");
-	//ospAddGeometry(model, top);
+	ospAddGeometry(model, top);
 	ospAddGeometry(model, left);
 	ospAddGeometry(model, back);
 	ospAddGeometry(model, right);
@@ -560,8 +559,8 @@ main(int argc, const char **argv) {
 	
 	fprintf(info, "Initializing Camera\n");
 	ospSet3f(camera, "pos", 0.0, 0.0, 0.1);
-	ospSet3f(camera, "dir", 0.0, 0.0, 1.0);
 	ospSet3f(camera, "up", 0.0, 1.0, 0.0);
+	ospSet3f(camera, "dir", 0.0, 0.0, 1.0);
 	ospSet2f(camera, "imageStart", 0.0, 0.0);
 	ospSet2f(camera, "imageEnd", 1.0, 1.0);
 	ospSet1f(camera, "height", 1.0);
@@ -590,22 +589,51 @@ main(int argc, const char **argv) {
 	ospSet1i(renderer, "rouletteDepth", 20);
 	ospCommit(renderer);
 	
-	fprintf(info, "Creating Frame Buffer\n");
-	frameBuffer = ospNewFrameBuffer(&size, OSP_FB_RGBA8, OSP_FB_COLOR);
-	
-	fprintf(info, "Initializing Frame Buffer\n");
-	ospCommit(frameBuffer);
-	
-	fprintf(info, "Starting Rendering\n");
-	ospFrameBufferClear(frameBuffer, OSP_FB_COLOR);
-	(void)ospRenderFrame(frameBuffer, renderer, OSP_FB_COLOR);
-	fprintf(info, "Finished Rendering\n");
-	
-	fprintf(info, "Saving render\n");
-	pixels = ospMapFrameBuffer(frameBuffer, OSP_FB_COLOR);
-	fwrite(pixels, sizeof(uint8_t), 4 * size.x * size.y, output);
-	ospUnmapFrameBuffer(pixels, frameBuffer);
-	fprintf(info, "Saved render\n");
+	fprintf(info, "Entering render loop\n");
+	for (;;) {
+		float px, py, pz, ux, uy, uz, vx, vy, vz;
+		int quality;
+		
+		fprintf(info, "Waiting for request...\n");
+		
+		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality) != 10) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "10:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		fprintf(info, "Got request\n");
+		
+		ospSet3f(camera, "pos", px, py, pz);
+		ospSet3f(camera, "up", ux, uy, uz);
+		ospSet3f(camera, "dir", vx, vy, vz);
+		ospCommit(camera);
+		
+		size = (osp_vec2i){ quality, quality };
+		
+		fprintf(info, "Creating Frame Buffer\n");
+		frameBuffer = ospNewFrameBuffer(&size, OSP_FB_RGBA8, OSP_FB_COLOR);
+		
+		fprintf(info, "Initializing Frame Buffer\n");
+		ospCommit(frameBuffer);
+		
+		fprintf(info, "Starting Rendering\n");
+		ospFrameBufferClear(frameBuffer, OSP_FB_COLOR);
+		(void)ospRenderFrame(frameBuffer, renderer, OSP_FB_COLOR);
+		fprintf(info, "Finished Rendering\n");
+		
+		fprintf(info, "Saving render\n");
+		pixels = ospMapFrameBuffer(frameBuffer, OSP_FB_COLOR);
+		
+		fprintf(output, "%lu:", (size_t)4 * (size_t)size.x * (size_t)size.y * sizeof(uint8_t));
+		fwrite(pixels, sizeof(uint8_t), 4 * size.x * size.y, output);
+		fprintf(output, ",");
+		fflush(output);
+		
+		ospUnmapFrameBuffer(pixels, frameBuffer);
+		fprintf(info, "Saved render\n");
+	}
 	
 	fprintf(info, "Shutting down OSPRay\n");
 	ospShutdown();
