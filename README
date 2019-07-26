@@ -28,3 +28,108 @@ rendered. You can click and drag on the image that's returned to
 rotate around the scene. Zooming does not currently work well.
 
 [0]: https://github.com/ospray/ospray/releases
+
+
+Using the Service
+-----------------
+
+This service is best described as a web-accessible rendering service
+that can be used entirely from requesting special URLs and getting
+images (JPEGs) back. This means that after constructing a URL you
+can use it in an HTML image tag.
+
+The Seelab team will handle running the service until the MVP is
+finished, after which point, we will hand off a Docker image that
+can be run on production systems. The Seelab base URL is:
+
+  http://accona.eecs.utk.edu:8801/
+
+The service is entirely stateless, so it will not remember anything
+between requests. This means that everything it needs to know to
+render the scene will have to be passed every request. This means we
+will need to know the camera position, camera view direction, camera
+up direction, desired resolution, and any scene information. For
+the community mural, most of these parameters can be fixed, which
+simplifies the requests.
+
+Here is a pair of JavaScript functions. The first one requires all
+information in the Tapestry URLs. The second one has a simplified
+interface that only needs the camera horizontal/vertical positions,
+image resolution, and ball position.
+
+function makeTapestryURL(options) {
+	const O = options;
+	
+	const parts = [
+		O.prefix,  // base URL
+		'image',
+		O.scene,
+		O.px, O.py, O.pz,  // position
+		O.ux, O.uy, O.uz,  // up
+		O.vx, O.vy, O.vz,  // view
+		O.quality,  // resolution (square image)
+		O.extra,  // extra parameters, like tiling
+	];
+	
+	return parts.join('/');
+}
+
+function makeMuralURL(options) {
+	const O = options;
+	
+	const sceneParts = [
+		'scene',
+		'ball',
+		O.bx, O.by, O.bz,  // ball position
+	];
+	
+	return makeTapestryURL({
+		prefix: 'http://accona.eecs.utk.edu:8801',
+		scene: sceneParts.join(','),
+		px: O.cameraHorizontal,  // camera x
+		py: O.cameraVertical,  // camera y
+		pz: 0.0,  // camera depth
+		ux: 0, uy: 1, uz: 0,
+		vx: 0, vy: 0, vz: 1,
+		quality: O.quality,
+		extra: '',
+	});
+}
+
+For example, you could use this to construct a render looking directly
+at a ball, that is directly in the center of the scene.
+
+const url = makeMuralURL({
+	bx: 0.0, by: 0.0, bz: 0.5,
+	cameraHorizontal: 0.0,
+	cameraVertical: 0.0,
+	quality: 512,
+});
+
+This results in:
+
+  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5/0/0/0/0/1/0/0/0/1/512/
+
+Likewise, we could make the ball move around in a circle in the
+viewport:
+
+for (let i=0; i<100; ++i) {
+	const url = makeMuralURL({
+		bx: Math.cos(2 * Math.PI * i / 100),
+		by: Math.sin(2 * Math.PI * i / 100),
+		bz: 0.5,
+		cameraHorizontal: 0.0,
+		cameraVertical: 0.0,
+		quality: 512,
+	});
+	
+	// set an <img> tag's src to this url
+}
+
+The scene has a fixed size and has limits on X, Y, and Z. Anything
+(camera or ball) can be put anywhere in this fixed space, but going
+outside of it (e.g. X=3.5) will not work as expected.
+
+  X: -1 (left) to +1 (right)
+  Y: -1 (bottom) to +1 (top)
+  Z: 0 (camera plane) to +1 (far end of the box)
