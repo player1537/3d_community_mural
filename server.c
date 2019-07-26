@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <ospray/ospray.h>
 
+
 typedef struct {
 	int a;
 	int b;
 	int c;
 	int d;
 } osp_vec4i;
+
 
 OSPMaterial
 makeMirrorMaterial(void) {
@@ -26,6 +28,7 @@ makeMirrorMaterial(void) {
 	
 	return material;
 }
+
 
 OSPGeometry
 makeBoxGeometry(float dx, float dy, float dz) {
@@ -89,6 +92,301 @@ makeBoxGeometry(float dx, float dy, float dz) {
 	return geometry;
 }
 
+
+OSPGeometry
+makeNegXGeometry(float dx, float dy, float dz) {
+	OSPGeometry geometry;
+	OSPData vertex, index, normal;
+	size_t nvertex, nindex, nnormal;
+	osp_vec3f *vertex_values, *normal_values;
+	osp_vec4i *index_values;
+	
+	vertex_values = (osp_vec3f[]){
+		/* 0 */ { -dx, -dy, -dz },
+		/* 1 */ { -dx, -dy, +dz },
+		/* 2 */ { -dx, +dy, -dz },
+		/* 3 */ { -dx, +dy, +dz },
+	};
+	nvertex = 4;
+	
+	index_values = (osp_vec4i[]){
+		/* -X */ { 0, 1, 3, 2 },
+	};
+	nindex = 1;
+	
+	normal_values = (osp_vec3f[]){
+		{ +1,  0,  0 },
+	};
+	nnormal = 1;
+	
+	vertex = ospNewData(nvertex, OSP_FLOAT3, (float *)vertex_values, 0);
+	ospCommit(vertex);
+	
+	index = ospNewData(nindex, OSP_INT4, (int *)index_values, 0);
+	ospCommit(index);
+	
+	normal = ospNewData(nnormal, OSP_FLOAT3, (float *)normal_values, 0);
+	ospCommit(normal);
+
+	geometry = ospNewGeometry("quads");
+	ospSetData(geometry, "vertex", vertex);
+	ospSetData(geometry, "vertex.normal", normal);
+	ospSetData(geometry, "index", index);
+	ospCommit(geometry);
+	
+	ospRelease(vertex);
+	ospRelease(normal);
+	ospRelease(index);
+	
+	return geometry;
+}
+
+
+OSPGeometry
+makePosXGeometry(float dx, float dy, float dz) {
+	OSPGeometry geometry;
+	OSPData vertex, index, normal;
+	size_t nvertex, nindex, nnormal;
+	osp_vec3f *vertex_values, *normal_values;
+	osp_vec4i *index_values;
+	
+	vertex_values = (osp_vec3f[]){
+		/* 4 */ { +dx, -dy, -dz },
+		/* 5 */ { +dx, -dy, +dz },
+		/* 6 */ { +dx, +dy, -dz },
+		/* 7 */ { +dx, +dy, +dz },
+	};
+	nvertex = 4;
+	
+	index_values = (osp_vec4i[]){
+		{ 0, 1, 3, 2 },
+	};
+	nindex = 1;
+	
+	normal_values = (osp_vec3f[]){
+		{ -1,  0,  0 },
+	};
+	nnormal = 1;
+	
+	vertex = ospNewData(nvertex, OSP_FLOAT3, (float *)vertex_values, 0);
+	ospCommit(vertex);
+	
+	index = ospNewData(nindex, OSP_INT4, (int *)index_values, 0);
+	ospCommit(index);
+	
+	normal = ospNewData(nnormal, OSP_FLOAT3, (float *)normal_values, 0);
+	ospCommit(normal);
+
+	geometry = ospNewGeometry("quads");
+	ospSetData(geometry, "vertex", vertex);
+	ospSetData(geometry, "vertex.normal", normal);
+	ospSetData(geometry, "index", index);
+	ospCommit(geometry);
+	
+	ospRelease(vertex);
+	ospRelease(normal);
+	ospRelease(index);
+	
+	return geometry;
+}
+
+
+OSPGeometry
+makeNegYGeometry(float dx, float dy, float dz) {
+	OSPGeometry geometry;
+	OSPData vertex, index, normal;
+	size_t nvertex, nindex, nnormal;
+	osp_vec3f *vertex_values, *normal_values;
+	osp_vec4i *index_values;
+	
+	vertex_values = (osp_vec3f[]){
+		/* 0 */ { -dx, -dy, -dz },
+		/* 1 */ { -dx, -dy, +dz },
+		/* 4 */ { +dx, -dy, -dz },
+		/* 5 */ { +dx, -dy, +dz },
+	};
+	nvertex = 4;
+	
+	index_values = (osp_vec4i[]){
+		/* -X */ { 0, 1, 3, 2 },
+	};
+	nindex = 1;
+	
+	normal_values = (osp_vec3f[]){
+		{  0, +1,  0 },
+	};
+	nnormal = 1;
+	
+	vertex = ospNewData(nvertex, OSP_FLOAT3, (float *)vertex_values, 0);
+	ospCommit(vertex);
+	
+	index = ospNewData(nindex, OSP_INT4, (int *)index_values, 0);
+	ospCommit(index);
+	
+	normal = ospNewData(nnormal, OSP_FLOAT3, (float *)normal_values, 0);
+	ospCommit(normal);
+
+	geometry = ospNewGeometry("quads");
+	ospSetData(geometry, "vertex", vertex);
+	ospSetData(geometry, "vertex.normal", normal);
+	ospSetData(geometry, "index", index);
+	ospCommit(geometry);
+	
+	ospRelease(vertex);
+	ospRelease(normal);
+	ospRelease(index);
+	
+	return geometry;
+}
+
+
+OSPGeometry
+makePosYGeometry(float dx, float dy, float dz) {
+	OSPGeometry geometry;
+	OSPData vertex, index, normal;
+	size_t nvertex, nindex, nnormal;
+	osp_vec3f *vertex_values, *normal_values;
+	osp_vec4i *index_values;
+	
+	vertex_values = (osp_vec3f[]){
+		/* 2 */ { -dx, +dy, -dz },
+		/* 3 */ { -dx, +dy, +dz },
+		/* 6 */ { +dx, +dy, -dz },
+		/* 7 */ { +dx, +dy, +dz },
+	};
+	nvertex = 4;
+	
+	index_values = (osp_vec4i[]){
+		{ 0, 1, 3, 2 },
+	};
+	nindex = 1;
+	
+	normal_values = (osp_vec3f[]){
+		{  0, -1,  0 },
+	};
+	nnormal = 1;
+	
+	vertex = ospNewData(nvertex, OSP_FLOAT3, (float *)vertex_values, 0);
+	ospCommit(vertex);
+	
+	index = ospNewData(nindex, OSP_INT4, (int *)index_values, 0);
+	ospCommit(index);
+	
+	normal = ospNewData(nnormal, OSP_FLOAT3, (float *)normal_values, 0);
+	ospCommit(normal);
+
+	geometry = ospNewGeometry("quads");
+	ospSetData(geometry, "vertex", vertex);
+	ospSetData(geometry, "vertex.normal", normal);
+	ospSetData(geometry, "index", index);
+	ospCommit(geometry);
+	
+	ospRelease(vertex);
+	ospRelease(normal);
+	ospRelease(index);
+	
+	return geometry;
+}
+
+
+OSPGeometry
+makeNegZGeometry(float dx, float dy, float dz) {
+	OSPGeometry geometry;
+	OSPData vertex, index, normal;
+	size_t nvertex, nindex, nnormal;
+	osp_vec3f *vertex_values, *normal_values;
+	osp_vec4i *index_values;
+	
+	vertex_values = (osp_vec3f[]){
+		/* 0 */ { -dx, -dy, -dz },
+		/* 2 */ { -dx, +dy, -dz },
+		/* 4 */ { +dx, -dy, -dz },
+		/* 6 */ { +dx, +dy, -dz },
+	};
+	nvertex = 4;
+	
+	index_values = (osp_vec4i[]){
+		{ 0, 1, 3, 2 },
+	};
+	nindex = 1;
+	
+	normal_values = (osp_vec3f[]){
+		{  0,  0, +1 },
+	};
+	nnormal = 1;
+	
+	vertex = ospNewData(nvertex, OSP_FLOAT3, (float *)vertex_values, 0);
+	ospCommit(vertex);
+	
+	index = ospNewData(nindex, OSP_INT4, (int *)index_values, 0);
+	ospCommit(index);
+	
+	normal = ospNewData(nnormal, OSP_FLOAT3, (float *)normal_values, 0);
+	ospCommit(normal);
+
+	geometry = ospNewGeometry("quads");
+	ospSetData(geometry, "vertex", vertex);
+	ospSetData(geometry, "vertex.normal", normal);
+	ospSetData(geometry, "index", index);
+	ospCommit(geometry);
+	
+	ospRelease(vertex);
+	ospRelease(normal);
+	ospRelease(index);
+	
+	return geometry;
+}
+
+
+OSPGeometry
+makePosZGeometry(float dx, float dy, float dz) {
+	OSPGeometry geometry;
+	OSPData vertex, index, normal;
+	size_t nvertex, nindex, nnormal;
+	osp_vec3f *vertex_values, *normal_values;
+	osp_vec4i *index_values;
+	
+	vertex_values = (osp_vec3f[]){
+		/* 1 */ { -dx, -dy, +dz },
+		/* 3 */ { -dx, +dy, +dz },
+		/* 5 */ { +dx, -dy, +dz },
+		/* 7 */ { +dx, +dy, +dz },
+	};
+	nvertex = 4;
+	
+	index_values = (osp_vec4i[]){
+		{ 0, 1, 3, 2 },
+	};
+	nindex = 1;
+	
+	normal_values = (osp_vec3f[]){
+		{  0,  0, -1 },
+	};
+	nnormal = 1;
+	
+	vertex = ospNewData(nvertex, OSP_FLOAT3, (float *)vertex_values, 0);
+	ospCommit(vertex);
+	
+	index = ospNewData(nindex, OSP_INT4, (int *)index_values, 0);
+	ospCommit(index);
+	
+	normal = ospNewData(nnormal, OSP_FLOAT3, (float *)normal_values, 0);
+	ospCommit(normal);
+
+	geometry = ospNewGeometry("quads");
+	ospSetData(geometry, "vertex", vertex);
+	ospSetData(geometry, "vertex.normal", normal);
+	ospSetData(geometry, "index", index);
+	ospCommit(geometry);
+	
+	ospRelease(vertex);
+	ospRelease(normal);
+	ospRelease(index);
+	
+	return geometry;
+}
+
+
 OSPGeometry
 makeBallGeometry(float cx, float cy, float cz, float radius) {
 	OSPGeometry geometry;
@@ -122,6 +420,7 @@ makeBallGeometry(float cx, float cy, float cz, float radius) {
 	return geometry;
 }
 
+
 OSPMaterial
 makeLuminousMaterial(void) {
 	OSPMaterial material;
@@ -139,6 +438,22 @@ makeLuminousMaterial(void) {
 	return material;
 }
 
+
+OSPMaterial
+makeBasicMaterial(float r, float g, float b) {
+	OSPMaterial material;
+	osp_vec3f Kd;
+	
+	Kd = (osp_vec3f){ r, g, b };
+	
+	material = ospNewMaterial2("pathtracer", "OBJMaterial");
+	ospSet3fv(material, "Kd", (float *)&Kd);
+	ospCommit(material);
+	
+	return material;
+}
+
+
 int
 main(int argc, const char **argv) {
 	OSPError err;
@@ -154,8 +469,8 @@ main(int argc, const char **argv) {
 	osp_vec3f cPos, cDir, cUp, lPos;
 	float lRadius;
 	osp_vec2f imageStart, imageEnd;
-	OSPMaterial mirror, luminous;
-	OSPGeometry box, ball;
+	OSPMaterial mirror, luminous, white, green, red, blue, yellow;
+	OSPGeometry top, left, back, right, bottom, front, ball;
 	const void *pixels;
 	
 	info = stdout;
@@ -170,7 +485,19 @@ main(int argc, const char **argv) {
 	}
 	
 	fprintf(info, "Creating Box\n");
-	box = makeBoxGeometry(1.0, 1.0, 1.0);
+	top = makePosYGeometry(1.0, 1.0, 1.0);
+	left = makeNegXGeometry(1.0, 1.0, 1.0);
+	back = makePosZGeometry(1.0, 1.0, 1.0);
+	right = makePosXGeometry(1.0, 1.0, 1.0);
+	bottom = makeNegYGeometry(1.0, 1.0, 1.0);
+	front = makeNegZGeometry(1.0, 1.0, 1.5);
+	
+	fprintf(info, "Creating Color Materials\n");
+	white = makeBasicMaterial(0.8, 0.8, 0.8);
+	green = makeBasicMaterial(0.1, 0.8, 0.1);
+	red = makeBasicMaterial(0.8, 0.1, 0.1);
+	blue = makeBasicMaterial(0.1, 0.1, 0.8);
+	yellow = makeBasicMaterial(0.1, 0.8, 0.8);
 	
 	fprintf(info, "Creating Mirror Material\n");
 	mirror = makeMirrorMaterial();
@@ -185,7 +512,7 @@ main(int argc, const char **argv) {
 	model = ospNewModel();
 
 	fprintf(info, "Creating Camera\n");
-	camera = ospNewCamera("orthographic");
+	camera = ospNewCamera("perspective");
 
 	fprintf(info, "Creating Point Light\n");
 	light_values[0] = ospNewLight3("sphere");
@@ -200,26 +527,47 @@ main(int argc, const char **argv) {
 	renderer = ospNewRenderer("pathtracer");
 
 	size = (osp_vec2i){ 512, 512 };
-	spp = 40;
+	spp = 120;
 	maxDepth = 20;
-	cPos = (osp_vec3f){ 0.0, 0.0, 0.0 };
+	cPos = (osp_vec3f){ 0.0, 0.0, 0.1 };
 	cDir = (osp_vec3f){ 0.0, 0.0, 1.0 };
 	cUp = (osp_vec3f){ 0.0, 1.0, 0.0 };
 	imageStart = (osp_vec2f){ 0.0, 0.0 };
 	imageEnd = (osp_vec2f){ 1.0, 1.0 };
 	lPos = (osp_vec3f){ 0.0, 0.9, 0.5 };
-	lRadius = 0.125;
+	lRadius = 0.0;
 	
 	fprintf(info, "Initializing Box\n");
-	ospSetMaterial(box, luminous);
-	ospCommit(box);
+	ospSetMaterial(top, white);
+	ospCommit(top);
+	
+	ospSetMaterial(left, red);
+	ospCommit(left);
+	
+	ospSetMaterial(back, white);
+	ospCommit(back);
+	
+	ospSetMaterial(right, green);
+	ospCommit(right);
+	
+	ospSetMaterial(bottom, white);
+	ospCommit(bottom);
+	
+	ospSetMaterial(front, luminous);
+	ospCommit(front);
+	(void)yellow;
+	(void)blue;
 	
 	fprintf(info, "Initializing Ball\n");
 	ospSetMaterial(ball, mirror);
 	ospCommit(ball);
 	
 	fprintf(info, "Initializing Model\n");
-	ospAddGeometry(model, box);
+	//ospAddGeometry(model, top);
+	ospAddGeometry(model, left);
+	ospAddGeometry(model, back);
+	ospAddGeometry(model, right);
+	ospAddGeometry(model, bottom);
 	ospAddGeometry(model, ball);
 	ospCommit(model);
 	
@@ -230,12 +578,14 @@ main(int argc, const char **argv) {
 	ospSet2fv(camera, "imageStart", (float *)&imageStart);
 	ospSet2fv(camera, "imageEnd", (float *)&imageEnd);
 	ospSet1f(camera, "height", 1.0);
+	ospSet1f(camera, "fovy", 120);
 	ospSet1f(camera, "aspect", 1.0);
 	ospCommit(camera);
 	
 	fprintf(info, "Initializing Point Light\n");
 	ospSet3fv(light_values[0], "position", (float *)&lPos);
 	ospSet1f(light_values[0], "radius", lRadius);
+	ospSet1f(light_values[0], "intensity", 10.0);
 	ospCommit(light_values[0]);
 	
 	fprintf(info, "Initializing Ambient Light\n");
@@ -250,6 +600,7 @@ main(int argc, const char **argv) {
 	ospSetData(renderer, "lights", lights);
 	ospSet1i(renderer, "spp", spp);
 	ospSet1i(renderer, "maxDepth", maxDepth);
+	ospSet1i(renderer, "rouletteDepth", 20);
 	ospCommit(renderer);
 	
 	fprintf(info, "Creating Frame Buffer\n");
