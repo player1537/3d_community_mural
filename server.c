@@ -456,21 +456,17 @@ makeBasicMaterial(float r, float g, float b) {
 
 int
 main(int argc, const char **argv) {
-	OSPError err;
 	FILE *info, *error, *output;
+	OSPError err;
 	OSPFrameBuffer frameBuffer;
 	OSPRenderer renderer;
-	osp_vec2i size;
-	int spp, maxDepth;
 	OSPModel model;
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
-	osp_vec3f cPos, cDir, cUp, lPos;
-	float lRadius;
-	osp_vec2f imageStart, imageEnd;
 	OSPMaterial mirror, luminous, white, green, red, blue, yellow;
 	OSPGeometry top, left, back, right, bottom, front, ball;
+	osp_vec2i size;
 	const void *pixels;
 	
 	info = stdout;
@@ -527,15 +523,6 @@ main(int argc, const char **argv) {
 	renderer = ospNewRenderer("pathtracer");
 
 	size = (osp_vec2i){ 512, 512 };
-	spp = 120;
-	maxDepth = 20;
-	cPos = (osp_vec3f){ 0.0, 0.0, 0.1 };
-	cDir = (osp_vec3f){ 0.0, 0.0, 1.0 };
-	cUp = (osp_vec3f){ 0.0, 1.0, 0.0 };
-	imageStart = (osp_vec2f){ 0.0, 0.0 };
-	imageEnd = (osp_vec2f){ 1.0, 1.0 };
-	lPos = (osp_vec3f){ 0.0, 0.9, 0.5 };
-	lRadius = 0.0;
 	
 	fprintf(info, "Initializing Box\n");
 	ospSetMaterial(top, white);
@@ -572,19 +559,19 @@ main(int argc, const char **argv) {
 	ospCommit(model);
 	
 	fprintf(info, "Initializing Camera\n");
-	ospSet3fv(camera, "pos", (float *)&cPos);
-	ospSet3fv(camera, "dir", (float *)&cDir);
-	ospSet3fv(camera, "up", (float *)&cUp);
-	ospSet2fv(camera, "imageStart", (float *)&imageStart);
-	ospSet2fv(camera, "imageEnd", (float *)&imageEnd);
+	ospSet3f(camera, "pos", 0.0, 0.0, 0.1);
+	ospSet3f(camera, "dir", 0.0, 0.0, 1.0);
+	ospSet3f(camera, "up", 0.0, 1.0, 0.0);
+	ospSet2f(camera, "imageStart", 0.0, 0.0);
+	ospSet2f(camera, "imageEnd", 1.0, 1.0);
 	ospSet1f(camera, "height", 1.0);
 	ospSet1f(camera, "fovy", 120);
 	ospSet1f(camera, "aspect", 1.0);
 	ospCommit(camera);
 	
 	fprintf(info, "Initializing Point Light\n");
-	ospSet3fv(light_values[0], "position", (float *)&lPos);
-	ospSet1f(light_values[0], "radius", lRadius);
+	ospSet3f(light_values[0], "position", 0.0, 0.9, 0.5);
+	ospSet1f(light_values[0], "radius", 0.0);
 	ospSet1f(light_values[0], "intensity", 10.0);
 	ospCommit(light_values[0]);
 	
@@ -598,8 +585,8 @@ main(int argc, const char **argv) {
 	ospSetObject(renderer, "model", model);
 	ospSetObject(renderer, "camera", camera);
 	ospSetData(renderer, "lights", lights);
-	ospSet1i(renderer, "spp", spp);
-	ospSet1i(renderer, "maxDepth", maxDepth);
+	ospSet1i(renderer, "spp", 120);
+	ospSet1i(renderer, "maxDepth", 20);
 	ospSet1i(renderer, "rouletteDepth", 20);
 	ospCommit(renderer);
 	
