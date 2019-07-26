@@ -1,5 +1,5 @@
 go.sh
 Dockerfile
-foo.py
-Makefile
 server.c
+server.py
+static/index.html

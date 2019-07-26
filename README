@@ -14,18 +14,17 @@ Before you run these commands, you need to have OSPRay downloaded. You
 can download it from its Releases page on GitHub [0]. We are using
 version 1.8.5.
 
-Currently there is not a web server frontend. However, to get a single
-image out, you can follow these steps. For convenience, the steps
-have been added to a Makefile, so in simple cases you can just run:
+To run the server, we need to create a Docker image with OSPRay
+installed. You can do this by first running:
 
-  $ make out.png
-  $ python3 -m http.server 8888
-  $ # open http://localhost:8888/out.png in the browser
+  $ ./go.sh build
 
-Without the Makefile, you would need to run these commands:
+Then to actually run the server:
 
-  $ ./go.sh build  # Create the Docker image with OSPRay and Python installed
-  $ ./go.sh run /opt/app/server  # Create the out.bin file with raw pixel data
-  $ ./go.sh run python3.7 -u foo.py  # Create out.png from out.bin
+  $ ./go.sh run python3.7 -u server.py /opt/app/server
+
+Then open http://localhost:8801 and you will see the scene
+rendered. You can click and drag on the image that's returned to
+rotate around the scene. Zooming does not currently work well.
 
 [0]: https://github.com/ospray/ospray/releases

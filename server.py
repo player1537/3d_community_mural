@@ -140,7 +140,7 @@ def cli():
 	import argparse
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--port', type=int, default=8860)
+	parser.add_argument('--port', type=int, default=8801)
 	parser.add_argument('--bind', default='')
 	parser.add_argument('exe')
 	args = vars(parser.parse_args())
