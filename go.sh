@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 tag=mural:$USER
-name=mural_service
+name=mural_$USER
 target=dev
 data=
 registry=
@@ -14,6 +14,7 @@ cwd=1
 interactive=1
 script=
 port=8801
+network=mural_$USER
 
 if [ -f env.sh ]; then
 	. env.sh
@@ -52,6 +53,10 @@ script() {
 	interactive= script=1 run "$@"
 }
 
+network() {
+	docker network create --driver overlay ${network:?}
+}
+
 push() {
 	docker tag $tag $registry/$tag
 	docker push $registry/$tag
@@ -62,6 +67,8 @@ create() {
 		--name $name \
 		--mount type=bind,src=$PWD,dst=$PWD \
 		${data:+--mount type=bind,src=$data,dst=$data} \
+		${port:+--publish $port:$port} \
+		${network:+--network $network} \
 		$registry/$tag "$@"
 }
 
