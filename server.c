@@ -613,7 +613,6 @@ main(int argc, const char **argv) {
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
-	OSPMaterial mirror, luminous, white, green, red, blue, yellow;
 	OSPGeometry posy, negx, posz, posx, negy, negz;
 	OSPMaterial *materials1, *materials2, *materials3;
 	OSPGeometry *geometries1, *geometries2, *geometries3;
@@ -641,13 +640,6 @@ main(int argc, const char **argv) {
 	negy = makeNegYGeometry(1.0, 1.0, 1.0);
 	negz = makeNegZGeometry(1.0, 1.0, 1.0);
 	
-	fprintf(info, "Creating Color Materials\n");
-	white = makeBasicMaterial(0.8, 0.8, 0.8);
-	green = makeBasicMaterial(0.1, 0.8, 0.1);
-	red = makeBasicMaterial(0.8, 0.1, 0.1);
-	blue = makeBasicMaterial(0.1, 0.1, 0.8);
-	yellow = makeBasicMaterial(0.1, 0.8, 0.8);
-	
 	fprintf(info, "Creating Preloaded Materials\n");
 	materials1 = makePreloadedMaterials();
 	if (materials1 == NULL) {
@@ -666,12 +658,6 @@ main(int argc, const char **argv) {
 	geometries2 = makePreloadedGeometries(&models2);
 	geometries3 = makePreloadedGeometries(&models3);
 	
-	fprintf(info, "Creating Mirror Material\n");
-	mirror = makeMirrorMaterial();
-	
-	fprintf(info, "Creating Luminous Material\n");
-	luminous = makeLuminousMaterial();
-	
 	fprintf(info, "Creating Box Model\n");
 	boxModel = ospNewModel();
 
@@ -689,28 +675,6 @@ main(int argc, const char **argv) {
 
 	fprintf(info, "Creating Renderer\n");
 	renderer = ospNewRenderer("pathtracer");
-	
-	fprintf(info, "Initializing Box\n");
-	ospSetMaterial(posy, white);
-	ospCommit(posy);
-	
-	ospSetMaterial(negx, red);
-	ospCommit(negx);
-	
-	ospSetMaterial(posz, blue);
-	ospCommit(posz);
-	
-	ospSetMaterial(posx, green);
-	ospCommit(posx);
-	
-	ospSetMaterial(negy, yellow);
-	ospCommit(negy);
-	
-	ospSetMaterial(negz, luminous);
-	ospCommit(negz);
-	(void)yellow;
-	(void)blue;
-	(void)mirror;
 	
 	fprintf(info, "Initializing Box Model\n");
 	ospAddGeometry(boxModel, posy);
