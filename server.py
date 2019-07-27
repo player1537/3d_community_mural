@@ -11,10 +11,50 @@ from dataclasses import dataclass
 from io import BytesIO
 from threading import Lock
 from math import sqrt
+from pathlib import Path
+from typing import NewType
 from PIL import Image
 
 
 _g_subprocess: Subprocess = None
+_g_materials: Materials = None
+
+
+MaterialID = NewType('MaterialID', int)
+MaterialName = NewType('MaterialName', str)
+MaterialRow = NewType('MaterialRow', str)
+
+
+@dataclass
+class Materials:
+	by_index: List[MaterialRow]
+	by_name: Dict[MaterialName, MaterialID]
+
+	@classmethod
+	def from_file(cls, path: Path) -> Materials:
+		by_index = []
+		by_name = {}
+
+		with open(path, 'r') as f:
+			it = (x.rstrip() for x in f)
+			for i, line in enumerate(it):
+				name = line.split('\t')[0]
+
+				by_index.append(line)
+				by_name[name] = i
+		
+		return cls(by_index, by_name)
+	
+	@property
+	def env(self) -> Dict[str, str]:
+		env = {}
+		for i, line in enumerate(self.by_index):
+			env[f'mat_{i}'] = line
+		env['nmat'] = f'{i}'
+		return env
+	
+	def lookup(self, name) -> MaterialID:
+		return self.by_name[name]
 
 
 @dataclass
@@ -23,8 +63,14 @@ class Subprocess:
 	lock: Lock
 	
 	@classmethod
-	def create(cls, exe):
-		process = Popen(['bash', '-c', f'{exe} 100>&1 1>&2'], stdin=PIPE, stdout=PIPE)
+	def create(cls, exe, *, env=None):
+		# In order to read from the subprocess, it seems like
+		# we need to read from either stdout or stderr, and
+		# can't read from an arbitrary file descriptor. One
+		# way around this is to take the file descriptor we
+		# want and turn it into stdout, and then save the old
+		# stdout to stderr. We can't do that without the shell.
+		process = Popen(['bash', '-c', f'{exe} 100>&1 1>&2'], stdin=PIPE, stdout=PIPE, env=env)
 		lock = Lock()
 		return cls(process, lock)
 	
@@ -87,6 +133,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsx = float(next(it))
 					bsy = float(next(it))
 					bsz = float(next(it))
+					matid = _g_materials.lookup(next(it))
 				else:
 					print('bad scene type {k!r}')
 					raise NotImplementedError
@@ -106,8 +153,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		n_cols = int(sqrt(num_tiles))
 		assert bx is not None and by is not None and bz is not None, f'{bx!r} {by!r} {bz!r}'
 		
-		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f' % (
-			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz, bsx, bsy, bsz,
+		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d' % (
+			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz, bsx, bsy, bsz, matid,
 		)
 		
 		with _g_subprocess.lock:
@@ -145,11 +192,16 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 	pass
 
 
-def main(bind, port, exe):
-	subprocess = Subprocess.create(exe)
+def main(bind, port, exe, materials):
+	env = materials.env
+
+	subprocess = Subprocess.create(exe, env=env)
 	
 	global _g_subprocess
 	_g_subprocess = subprocess
+	
+	global _g_materials
+	_g_materials = materials
 	
 	address = (bind, port)
 	print(f'Listening on {address!r}')
@@ -158,11 +210,15 @@ def main(bind, port, exe):
 
 
 def cli():
+	def materials(s):
+		return Materials.from_file(Path(s))
+
 	import argparse
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--port', type=int, default=8801)
 	parser.add_argument('--bind', default='')
+	parser.add_argument('--materials', type=materials)
 	parser.add_argument('exe')
 	args = vars(parser.parse_args())
 

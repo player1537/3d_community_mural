@@ -524,6 +524,44 @@ error:
 }
 
 
+OSPMaterial *
+makePreloadedMaterials(void) {
+	OSPMaterial *materials, material;
+	int nmaterial;
+	char *s, name[32];
+	int i;
+	float Kdr, Kdg, Kdb, d, Ksr, Ksg, Ksb, Ns;
+	
+	s = getenv("nmat");
+	if (s == NULL) {
+		nmaterial = 0;
+	} else if (sscanf(s, "%d", &nmaterial) != 1) {
+		return NULL;
+	}
+	
+	materials = malloc(nmaterial * sizeof(*materials));
+	
+	for (i=0; i<nmaterial; ++i) {
+		snprintf(name, sizeof(name), "mat_%d", i);
+		s = getenv(name);
+		if (sscanf(s, "%*s %f %f %f %f %f %f %f %f", &Kdr, &Kdg, &Kdb, &d, &Ksr, &Ksg, &Ksb, &Ns) != 8) {
+			return NULL;
+		}
+		
+		material = ospNewMaterial2("pathtracer", "OBJMaterial");
+		ospSet3f(material, "Kd", Kdr, Kdg, Kdb);
+		ospSet1f(material, "d", d);
+		ospSet3f(material, "Ks", Ksr, Ksg, Ksb);
+		ospSet1f(material, "Ns", Ns);
+		ospCommit(material);
+		
+		materials[i] = material;
+	}
+	
+	return materials;
+}
+
+
 int
 main(int argc, const char **argv) {
 	FILE *input, *info, *error, *output;
@@ -534,7 +572,7 @@ main(int argc, const char **argv) {
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
-	OSPMaterial mirror, luminous, white, green, red, blue, yellow;
+	OSPMaterial mirror, luminous, white, green, red, blue, yellow, *materials;
 	OSPGeometry top, left, back, right, bottom, front, ball;
 	osp_vec2i size;
 	const void *pixels;
@@ -565,6 +603,13 @@ main(int argc, const char **argv) {
 	red = makeBasicMaterial(0.8, 0.1, 0.1);
 	blue = makeBasicMaterial(0.1, 0.1, 0.8);
 	yellow = makeBasicMaterial(0.1, 0.8, 0.8);
+	
+	fprintf(info, "Creating Preloaded Materials\n");
+	materials = makePreloadedMaterials();
+	if (materials == NULL) {
+		fprintf(error, "Error: failed to load materials\n");
+		return 1;
+	}
 	
 	fprintf(info, "Creating Mirror Material\n");
 	mirror = makeMirrorMaterial();
@@ -673,10 +718,11 @@ main(int argc, const char **argv) {
 		float px, py, pz, ux, uy, uz, vx, vy, vz;
 		int quality;
 		float bx, by, bz, bsx, bsy, bsz;
+		int matid;
 		
 		fprintf(info, "Waiting for request...\n");
 		
-		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz, &bsx, &bsy, &bsz) != 16) {
+		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz, &bsx, &bsy, &bsz, &matid) != 17) {
 			fprintf(error, "Error: bad format\n");
 			fprintf(output, "9:error arg,");
 			fflush(output);
@@ -694,6 +740,9 @@ main(int argc, const char **argv) {
 		boxTransform.l.vy = (osp_vec3f){ 0, 1, 0 };
 		boxTransform.l.vz = (osp_vec3f){ 0, 0, 1 };
 		boxTransform.p = (osp_vec3f){ 0, 0, 0 };
+		
+		ospSetMaterial(ball, materials[matid]);
+		ospCommit(ball);
 
 		ballTrans = ospNewInstance(ballModel, &ballTransform);
 		ospCommit(ballTrans);
