@@ -20,18 +20,19 @@ _g_subprocess: Subprocess = None
 _g_materials: Materials = None
 
 
-MaterialID = NewType('MaterialID', int)
-MaterialName = NewType('MaterialName', str)
-MaterialRow = NewType('MaterialRow', str)
+Index = NewType('Index', int)
+Name = NewType('Name', str)
+Row = NewType('Row', str)
 
 
 @dataclass
-class Materials:
-	by_index: List[MaterialRow]
-	by_name: Dict[MaterialName, MaterialID]
+class Assets:
+	by_index: List[Row]
+	by_name: Dict[Name, Index]
+	tag: ClassVar[str] = None
 
 	@classmethod
-	def from_file(cls, path: Path) -> Materials:
+	def from_file(cls, path: Path) -> Assets:
 		by_index = []
 		by_name = {}
 
@@ -49,12 +50,17 @@ class Materials:
 	def env(self) -> Dict[str, str]:
 		env = {}
 		for i, line in enumerate(self.by_index):
-			env[f'mat_{i}'] = line
-		env['nmat'] = f'{i}'
+			env[f'{self.tag}_{i}'] = line
+		env[f'n{self.tag}'] = f'{i}'
 		return env
 	
-	def lookup(self, name) -> MaterialID:
+	def lookup(self, name) -> Index:
 		return self.by_name[name]
+
+
+@dataclass
+class Materials(Assets):
+	tag: ClassVar[str] = 'mat'
 
 
 @dataclass
