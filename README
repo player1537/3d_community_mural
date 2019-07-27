@@ -21,11 +21,15 @@ installed. You can do this by first running:
 
 Then to actually run the server:
 
-  $ ./go.sh run python3.7 -u server.py /opt/app/server
+  $ ./go.sh server
 
 Then open http://localhost:8801 and you will see the scene
 rendered. You can click and drag on the image that's returned to
 rotate around the scene. Zooming does not currently work well.
+
+Internally, the "./go.sh server" command passes several arguments to
+the server code automatically. For instance, it passes the location
+of the materials.txt file.
 
 [0]: https://github.com/ospray/ospray/releases
 
@@ -379,9 +383,14 @@ light. Its position, color, and intensity can be changed.
 Fewer than 3 Objects
 --------------------
 
-The renderer is hard coded to use 3 objects. If you want to use fewer than 3, then the best course of action is to position the unwanted objects outside of the box. For instance, setting X to 100 should get it far enough away to not affect anything.
+The renderer is hard coded to use 3 objects. If you want to use fewer
+than 3, then the best course of action is to position the unwanted
+objects outside of the box. For instance, setting X to 100 should
+get it far enough away to not affect anything.
 
-All of the other object parameters must be set correctly though or else the request will fail. So one way to do this is to keep a base object specification and then use then when needed:
+All of the other object parameters must be set correctly though or
+else the request will fail. So one way to do this is to keep a base
+object specification and then use then when needed:
 
 const baseObject = {
 	object: 'Donut',
