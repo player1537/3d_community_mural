@@ -18,6 +18,7 @@ from PIL import Image
 
 _g_subprocess: Subprocess = None
 _g_materials: Materials = None
+_g_objs: Objs = None
 
 
 Index = NewType('Index', int)
@@ -37,9 +38,9 @@ class Assets:
 		by_name = {}
 
 		with open(path, 'r') as f:
-			it = (x.rstrip() for x in f)
+			it = (x.rstrip() for x in f if x != '')
 			for i, line in enumerate(it):
-				name = line.split('\t')[0]
+				name = line.split()[0]
 
 				by_index.append(line)
 				by_name[name] = i
@@ -51,7 +52,7 @@ class Assets:
 		env = {}
 		for i, line in enumerate(self.by_index):
 			env[f'{self.tag}_{i}'] = line
-		env[f'n{self.tag}'] = f'{i}'
+		env[f'n{self.tag}'] = str(len(env))
 		return env
 	
 	def lookup(self, name) -> Index:
@@ -61,6 +62,11 @@ class Assets:
 @dataclass
 class Materials(Assets):
 	tag: ClassVar[str] = 'mat'
+
+
+@dataclass
+class Objs(Assets):
+	tag: ClassVar[str] = 'obj'
 
 
 @dataclass
@@ -132,7 +138,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		type = next(it)
 		if type == 'scene':
 			for k in it:
-				if k == 'ball':
+				if k == 'obj':
+					objid = _g_objs.lookup(next(it))
 					bx = float(next(it))
 					by = float(next(it))
 					bz = float(next(it))
@@ -141,7 +148,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsz = float(next(it))
 					matid = _g_materials.lookup(next(it))
 				else:
-					print('bad scene type {k!r}')
+					print(f'bad scene type {k!r}')
 					raise NotImplementedError
 		else:
 			print(f'bad type {scene!r}')
@@ -159,8 +166,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		n_cols = int(sqrt(num_tiles))
 		assert bx is not None and by is not None and bz is not None, f'{bx!r} {by!r} {bz!r}'
 		
-		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d' % (
-			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz, bsx, bsy, bsz, matid,
+		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d %d' % (
+			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz, bsx, bsy, bsz, matid, objid,
 		)
 		
 		with _g_subprocess.lock:
@@ -198,8 +205,14 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 	pass
 
 
-def main(bind, port, exe, materials):
-	env = materials.env
+def main(bind, port, exe, materials, objs):
+	env = {}
+	if materials is not None:
+		env.update(materials.env)
+	if objs is not None:
+		for k, v in objs.env.items():
+			print(f'{k!r}={v!r}')
+		env.update(objs.env)
 
 	subprocess = Subprocess.create(exe, env=env)
 	
@@ -208,6 +221,9 @@ def main(bind, port, exe, materials):
 	
 	global _g_materials
 	_g_materials = materials
+	
+	global _g_objs
+	_g_objs = objs
 	
 	address = (bind, port)
 	print(f'Listening on {address!r}')
@@ -218,6 +234,9 @@ def main(bind, port, exe, materials):
 def cli():
 	def materials(s):
 		return Materials.from_file(Path(s))
+	
+	def objs(s):
+		return Objs.from_file(Path(s))
 
 	import argparse
 
@@ -225,6 +244,7 @@ def cli():
 	parser.add_argument('--port', type=int, default=8801)
 	parser.add_argument('--bind', default='')
 	parser.add_argument('--materials', type=materials)
+	parser.add_argument('--objs', type=objs)
 	parser.add_argument('exe')
 	args = vars(parser.parse_args())
 

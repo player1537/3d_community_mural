@@ -9,3 +9,4 @@ gen/%.bin: models/%.obj models/%.mtl
 	./go.sh python obj_to_bin.py --output $@ $< $(rescale)
 
 gen/Donut2.bin: rescale := --rescale
+gen/Platonic2.bin: rescale := --rescale

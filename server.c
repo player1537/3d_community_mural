@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ospray/ospray.h>
 
 
@@ -562,18 +563,55 @@ makePreloadedMaterials(void) {
 }
 
 
+OSPGeometry *
+makePreloadedGeometries(OSPModel **out_models) {
+	OSPGeometry *geometries, geometry;
+	OSPModel *models, model;
+	int i, ngeometry;
+	char *s, name[32];
+	
+	s = getenv("nobj");
+	if (s == NULL) {
+		ngeometry = 0;
+	} else if (sscanf(s, "%d", &ngeometry) != 1) {
+		return NULL;
+	}
+	
+	geometries = malloc(ngeometry * sizeof(*geometries));
+	models = malloc(ngeometry * sizeof(*models));
+	
+	for (i=0; i<ngeometry; ++i) {
+		snprintf(name, sizeof(name), "obj_%d", i);
+		s = getenv(name);
+		s = strrchr(s, ' ') + 1;
+		
+		geometry = makeOBJGeometry(s);
+		
+		model = ospNewModel();
+		ospAddGeometry(model, geometry);
+		ospCommit(model);
+		
+		geometries[i] = geometry;
+		models[i] = model;
+	}
+	
+	*out_models = models;
+	return geometries;
+}
+
+
 int
 main(int argc, const char **argv) {
 	FILE *input, *info, *error, *output;
 	OSPError err;
 	OSPFrameBuffer frameBuffer;
 	OSPRenderer renderer;
-	OSPModel boxModel, ballModel;
+	OSPModel boxModel, ballModel, *models;
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
 	OSPMaterial mirror, luminous, white, green, red, blue, yellow, *materials;
-	OSPGeometry top, left, back, right, bottom, front, ball;
+	OSPGeometry top, left, back, right, bottom, front, ball, *geometries;
 	osp_vec2i size;
 	const void *pixels;
 	
@@ -608,6 +646,13 @@ main(int argc, const char **argv) {
 	materials = makePreloadedMaterials();
 	if (materials == NULL) {
 		fprintf(error, "Error: failed to load materials\n");
+		return 1;
+	}
+	
+	fprintf(info, "Creating Preloaded Geometries\n");
+	geometries = makePreloadedGeometries(&models);
+	if (geometries == NULL) {
+		fprintf(error, "Error: failed to load geometries\n");
 		return 1;
 	}
 	
@@ -712,17 +757,18 @@ main(int argc, const char **argv) {
 	
 	fprintf(info, "Entering render loop\n");
 	for (;;) {
-		OSPModel model;
-		OSPGeometry ballTrans, boxTrans;
-		osp_affine3f ballTransform, boxTransform;
+		OSPModel model, objModel;
+		OSPGeometry objTrans, boxTrans, objGeometry;
+		OSPMaterial objMaterial;
+		osp_affine3f objTransform, boxTransform;
 		float px, py, pz, ux, uy, uz, vx, vy, vz;
 		int quality;
 		float bx, by, bz, bsx, bsy, bsz;
-		int matid;
+		int matid, objid;
 		
 		fprintf(info, "Waiting for request...\n");
 		
-		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz, &bsx, &bsy, &bsz, &matid) != 17) {
+		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz, &bsx, &bsy, &bsz, &matid, &objid) != 18) {
 			fprintf(error, "Error: bad format\n");
 			fprintf(output, "9:error arg,");
 			fflush(output);
@@ -731,27 +777,31 @@ main(int argc, const char **argv) {
 		
 		fprintf(info, "Got request\n");
 		
-		ballTransform.l.vx = (osp_vec3f){ bsx,   0, 0   };
-		ballTransform.l.vy = (osp_vec3f){   0, bsy, 0   };
-		ballTransform.l.vz = (osp_vec3f){   0,   0, bsz };
-		ballTransform.p = (osp_vec3f){ bx, by, bz };
+		objTransform.l.vx = (osp_vec3f){ bsx,   0, 0   };
+		objTransform.l.vy = (osp_vec3f){   0, bsy, 0   };
+		objTransform.l.vz = (osp_vec3f){   0,   0, bsz };
+		objTransform.p = (osp_vec3f){ bx, by, bz };
 		
 		boxTransform.l.vx = (osp_vec3f){ 1, 0, 0 };
 		boxTransform.l.vy = (osp_vec3f){ 0, 1, 0 };
 		boxTransform.l.vz = (osp_vec3f){ 0, 0, 1 };
 		boxTransform.p = (osp_vec3f){ 0, 0, 0 };
 		
-		ospSetMaterial(ball, materials[matid]);
-		ospCommit(ball);
+		objModel = models[objid];
+		objGeometry = geometries[objid];
+		objMaterial = materials[matid];
+		
+		ospSetMaterial(objGeometry, objMaterial);
+		ospCommit(objGeometry);
 
-		ballTrans = ospNewInstance(ballModel, &ballTransform);
-		ospCommit(ballTrans);
+		objTrans = ospNewInstance(objModel, &objTransform);
+		ospCommit(objTrans);
 		
 		boxTrans = ospNewInstance(boxModel, &boxTransform);
 		ospCommit(boxTrans);
 		
 		model = ospNewModel();
-		ospAddGeometry(model, ballTrans);
+		ospAddGeometry(model, objTrans);
 		ospAddGeometry(model, boxTrans);
 		ospCommit(model);
 		
@@ -760,7 +810,7 @@ main(int argc, const char **argv) {
 		
 		ospRelease(model);
 		ospRelease(boxTrans);
-		ospRelease(ballTrans);
+		ospRelease(objTrans);
 		
 		ospSet3f(camera, "pos", px, py, pz);
 		ospSet3f(camera, "up", ux, uy, uz);
