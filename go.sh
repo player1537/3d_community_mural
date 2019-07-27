@@ -86,6 +86,7 @@ python() { python3 "$@"; }
 server() {
 	python server.py \
 		${port:+--port=$port} \
+		--materials materials.txt \
 		/opt/app/server \
 		"$@"
 }

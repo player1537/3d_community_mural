@@ -82,6 +82,7 @@ function makeMuralURL(options) {
 		'ball',
 		O.bx, O.by, O.bz,  // ball position
 		O.bsx, O.bsy, O.bsz,  // ball scale
+		O.material,  // ball material
 	];
 	
 	return makeTapestryURL({
@@ -103,6 +104,7 @@ at a ball, that is directly in the center of the scene.
 const url = makeMuralURL({
 	bx: 0.0, by: 0.0, bz: 0.5,
 	bsx: 1.0, bsy: 2.0, bsz: 1.0,
+	material: 'Emerald',
 	cameraHorizontal: 0.0,
 	cameraVertical: 0.0,
 	quality: 512,
@@ -110,7 +112,7 @@ const url = makeMuralURL({
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5,1.0,2.0,1.0/0/0/-2/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5,1.0,2.0,1.0,Emerald/0/0/-2/0/1/0/0/0/1/512/
 
 Likewise, we could make the ball move around in a circle in the
 viewport:
@@ -121,6 +123,7 @@ for (let i=0; i<100; ++i) {
 		by: Math.sin(2 * Math.PI * i / 100),
 		bz: 0.5,
 		bsx: 1.0, bsy: 1.0, bsz: 1.0,
+		material: 'Emerald',
 		cameraHorizontal: 0.0,
 		cameraVertical: 0.0,
 		quality: 512,
@@ -196,6 +199,52 @@ a line to the Makefile like:
   gen/Donut2.bin: rescale := --rescale
 
 And the next time you build Donut2.bin, it will be rescaled correctly.
+
+
+Materials
+---------
+
+There is a set of preloaded materials available to the user of the
+service. These are based on a list available at:
+
+  http://web.eecs.utk.edu/~huangj/cs456/materials_ogl.htm
+
+They are referenced by name, with internal spaces removed. The current
+master list of names is:
+
+  Brass          Copper         Pewter         Jade           Turquoise
+  Bronze         PolishedCopper Silver         Obsidian       BlackPlastic
+  PolishedBronze Gold           PolishedSilver Pearl          BlackRubber
+  Chrome         PolishedGold   Emerald        Ruby
+
+Internally, these materials are loaded into the OSPRay process via
+environment variables. On variable tells the number of materials to
+load, and then the remaining variables follow a specific naming scheme.
+
+  nmat: Number of materials to load (e.g. 12).
+  mat_0: First material.
+  mat_1: Second material.
+  ...
+  mat_11: Last material.
+
+Each of the mat_ variables is a whitespace-delimited set of floats
+(prefixed with a name). For example, Brass' environment variable
+value is:
+
+  Brass   0.329412 0.223529 0.027451 1.0  0.780392 0.568627 0.113725 1.0  0.992157 0.941176 0.807843 1.0  27.8974
+
+These fields are, in order:
+
+  Name, Diffuse R, G, B, Opacity, Specular R, G, B, Shininess
+
+The server loads these from a materials.txt in the root of this
+project. To create your own, add a line like the Brass one above to
+the end of materials.txt. For instance, an opaque red matte material
+might look like:
+
+  Red  0.8 0 0  1  0.4 0 0  10
+
+Then when you reload the server, you can refer to it by the name "Red".
 
 
 Miscellaneous Notes
