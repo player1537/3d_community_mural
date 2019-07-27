@@ -567,22 +567,25 @@ OSPGeometry *
 makePreloadedGeometries(OSPModel **out_models) {
 	OSPGeometry *geometries, geometry;
 	OSPModel *models, model;
-	int i, ngeometry;
+	int i, nobj;
 	char *s, name[32];
 	
 	s = getenv("nobj");
 	if (s == NULL) {
-		ngeometry = 0;
-	} else if (sscanf(s, "%d", &ngeometry) != 1) {
+		nobj = 0;
+	} else if (sscanf(s, "%d", &nobj) != 1) {
 		return NULL;
 	}
 	
-	geometries = malloc(ngeometry * sizeof(*geometries));
-	models = malloc(ngeometry * sizeof(*models));
+	geometries = malloc(nobj * sizeof(*geometries));
+	models = malloc(nobj * sizeof(*models));
 	
-	for (i=0; i<ngeometry; ++i) {
+	for (i=0; i<nobj; ++i) {
 		snprintf(name, sizeof(name), "obj_%d", i);
 		s = getenv(name);
+		
+		// We get a string like "Name Path" and we want the
+		// path to load the object
 		s = strrchr(s, ' ') + 1;
 		
 		geometry = makeOBJGeometry(s);
@@ -606,12 +609,12 @@ main(int argc, const char **argv) {
 	OSPError err;
 	OSPFrameBuffer frameBuffer;
 	OSPRenderer renderer;
-	OSPModel boxModel, ballModel, *models;
+	OSPModel boxModel, *models;
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
 	OSPMaterial mirror, luminous, white, green, red, blue, yellow, *materials;
-	OSPGeometry top, left, back, right, bottom, front, ball, *geometries;
+	OSPGeometry top, left, back, right, bottom, front, *geometries;
 	osp_vec2i size;
 	const void *pixels;
 	
@@ -659,17 +662,11 @@ main(int argc, const char **argv) {
 	fprintf(info, "Creating Mirror Material\n");
 	mirror = makeMirrorMaterial();
 	
-	fprintf(info, "Creating Ball\n");
-	ball = makeOBJGeometry("gen/Donut2.bin");
-	
 	fprintf(info, "Creating Luminous Material\n");
 	luminous = makeLuminousMaterial();
 	
 	fprintf(info, "Creating Box Model\n");
 	boxModel = ospNewModel();
-	
-	fprintf(info, "Creating Ball Model\n");
-	ballModel = ospNewModel();
 
 	fprintf(info, "Creating Camera\n");
 	camera = ospNewCamera("perspective");
@@ -706,10 +703,7 @@ main(int argc, const char **argv) {
 	ospCommit(front);
 	(void)yellow;
 	(void)blue;
-	
-	fprintf(info, "Initializing Ball\n");
-	ospSetMaterial(ball, mirror);
-	ospCommit(ball);
+	(void)mirror;
 	
 	fprintf(info, "Initializing Box Model\n");
 	ospAddGeometry(boxModel, top);
@@ -718,10 +712,6 @@ main(int argc, const char **argv) {
 	ospAddGeometry(boxModel, right);
 	ospAddGeometry(boxModel, bottom);
 	ospCommit(boxModel);
-	
-	fprintf(info, "Initializing Ball Model\n");
-	ospAddGeometry(ballModel, ball);
-	ospCommit(ballModel);
 	
 	fprintf(info, "Initializing Camera\n");
 	ospSet3f(camera, "pos", 0.0, 0.0, 0.1);
