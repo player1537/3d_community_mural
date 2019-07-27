@@ -672,22 +672,22 @@ main(int argc, const char **argv) {
 		osp_affine3f ballTransform, boxTransform;
 		float px, py, pz, ux, uy, uz, vx, vy, vz;
 		int quality;
-		float bx, by, bz;
+		float bx, by, bz, bsx, bsy, bsz;
 		
 		fprintf(info, "Waiting for request...\n");
 		
-		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz) != 13) {
+		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz, &bsx, &bsy, &bsz) != 16) {
 			fprintf(error, "Error: bad format\n");
-			fprintf(output, "10:error arg,");
+			fprintf(output, "9:error arg,");
 			fflush(output);
 			continue;
 		}
 		
 		fprintf(info, "Got request\n");
 		
-		ballTransform.l.vx = (osp_vec3f){ 1, 0, 0 };
-		ballTransform.l.vy = (osp_vec3f){ 0, 1, 0 };
-		ballTransform.l.vz = (osp_vec3f){ 0, 0, 1 };
+		ballTransform.l.vx = (osp_vec3f){ bsx,   0, 0   };
+		ballTransform.l.vy = (osp_vec3f){   0, bsy, 0   };
+		ballTransform.l.vz = (osp_vec3f){   0,   0, bsz };
 		ballTransform.p = (osp_vec3f){ bx, by, bz };
 		
 		boxTransform.l.vx = (osp_vec3f){ 1, 0, 0 };

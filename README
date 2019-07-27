@@ -81,6 +81,7 @@ function makeMuralURL(options) {
 		'scene',
 		'ball',
 		O.bx, O.by, O.bz,  // ball position
+		O.bsx, O.bsy, O.bsz,  // ball scale
 	];
 	
 	return makeTapestryURL({
@@ -101,6 +102,7 @@ at a ball, that is directly in the center of the scene.
 
 const url = makeMuralURL({
 	bx: 0.0, by: 0.0, bz: 0.5,
+	bsx: 1.0, bsy: 2.0, bsz: 1.0,
 	cameraHorizontal: 0.0,
 	cameraVertical: 0.0,
 	quality: 512,
@@ -108,7 +110,7 @@ const url = makeMuralURL({
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5/0/0/-2/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5,1.0,2.0,1.0/0/0/-2/0/1/0/0/0/1/512/
 
 Likewise, we could make the ball move around in a circle in the
 viewport:
@@ -118,6 +120,7 @@ for (let i=0; i<100; ++i) {
 		bx: Math.cos(2 * Math.PI * i / 100),
 		by: Math.sin(2 * Math.PI * i / 100),
 		bz: 0.5,
+		bsx: 1.0, bsy: 1.0, bsz: 1.0,
 		cameraHorizontal: 0.0,
 		cameraVertical: 0.0,
 		quality: 512,

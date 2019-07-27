@@ -84,6 +84,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bx = float(next(it))
 					by = float(next(it))
 					bz = float(next(it))
+					bsx = float(next(it))
+					bsy = float(next(it))
+					bsz = float(next(it))
 				else:
 					print('bad scene type {k!r}')
 					raise NotImplementedError
@@ -103,8 +106,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		n_cols = int(sqrt(num_tiles))
 		assert bx is not None and by is not None and bz is not None, f'{bx!r} {by!r} {bz!r}'
 		
-		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f' % (
-			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz,
+		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f' % (
+			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz, bsx, bsy, bsz,
 		)
 		
 		with _g_subprocess.lock:
