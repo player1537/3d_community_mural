@@ -376,6 +376,25 @@ There is currently only one controllable light source, a point
 light. Its position, color, and intensity can be changed.
 
 
+Fewer than 3 Objects
+--------------------
+
+The renderer is hard coded to use 3 objects. If you want to use fewer than 3, then the best course of action is to position the unwanted objects outside of the box. For instance, setting X to 100 should get it far enough away to not affect anything.
+
+All of the other object parameters must be set correctly though or else the request will fail. So one way to do this is to keep a base object specification and then use then when needed:
+
+const baseObject = {
+	object: 'Donut',
+	bx: 100.0, by: 100.0, bz: 100.0,
+	bsx: 1.0, bsy: 2.0, bsz: 1.0,
+	material: 'Emerald',
+};
+
+const obj1 = Object.assign({}, baseObject, {
+	number: 1,
+});
+
+
 Miscellaneous Notes
 -------------------
 
