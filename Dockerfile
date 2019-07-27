@@ -11,7 +11,8 @@ COPY ospray-${ospray_version}.x86_64.linux.tar.gz /tmp/
 RUN tar xvf /tmp/ospray-${ospray_version}.x86_64.linux.tar.gz --strip-components=1 -C /usr/
 
 RUN python3.7 -m pip install \
-        Pillow
+        Pillow \
+        pywavefront
 
 WORKDIR /opt/app
 

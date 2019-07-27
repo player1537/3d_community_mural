@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <ospray/ospray.h>
 
 
@@ -454,6 +455,75 @@ makeBasicMaterial(float r, float g, float b) {
 }
 
 
+OSPGeometry
+makeOBJGeometry(const char *filename) {
+	OSPGeometry geometry;
+	OSPData vertex_data, index_data;
+	int nvertex, nindex;
+	float *vertices;
+	int *indices;
+	FILE *f;
+	char c;
+	size_t sz;
+	int has_vertex, has_index, has_extra1, has_extra2;
+	
+	f = fopen(filename, "rb");
+	
+	(void)fread(&c, sizeof(c), 1, f);
+	has_vertex = c == 'V';
+	
+	(void)fread(&c, sizeof(c), 1, f);
+	has_index = c == 'I';
+	
+	(void)fread(&c, sizeof(c), 1, f);
+	has_extra1 = c == '?';
+	
+	(void)fread(&c, sizeof(c), 1, f);
+	has_extra2 = c == '?';
+
+	if (!has_vertex) goto error;
+	if (!has_index) goto error;
+	if (has_extra1) goto error;
+	if (has_extra2) goto error;
+	
+	vertices = NULL;
+	if (has_vertex) {
+		(void)fread(&nvertex, sizeof(nvertex), 1, f);
+		sz = (size_t)nvertex * 3;
+		vertices = malloc(sz * sizeof(*vertices));
+		(void)fread(vertices, sizeof(*vertices), sz, f);
+		vertex_data = ospNewData(nvertex, OSP_FLOAT3, vertices, OSP_DATA_SHARED_BUFFER);
+		ospCommit(vertex_data);
+	}
+	
+	indices = NULL;
+	if (has_index) {
+		(void)fread(&nindex, sizeof(nindex), 1, f);
+		sz = (size_t)nindex * 3;
+		indices = malloc(sz * sizeof(*indices));
+		(void)fread(indices, sizeof(*indices), sz, f);
+		index_data = ospNewData(nindex, OSP_INT3, indices, OSP_DATA_SHARED_BUFFER);
+		ospCommit(index_data);
+	}
+	
+	geometry = ospNewGeometry("triangles");
+	if (has_vertex) {
+		ospSetData(geometry, "vertex", vertex_data);
+		ospRelease(vertex_data);
+	}
+	if (has_index) {
+		ospSetData(geometry, "index", index_data);
+		ospRelease(index_data);
+	}
+	ospCommit(geometry);
+	
+error:
+	fclose(f);
+	
+	return geometry;
+}
+
+
 int
 main(int argc, const char **argv) {
 	FILE *input, *info, *error, *output;
@@ -500,7 +570,7 @@ main(int argc, const char **argv) {
 	mirror = makeMirrorMaterial();
 	
 	fprintf(info, "Creating Ball\n");
-	ball = makeBallGeometry(0.0, 0.0, 0.0, 0.25);
+	ball = makeOBJGeometry("gen/Donut2.bin");
 	
 	fprintf(info, "Creating Luminous Material\n");
 	luminous = makeLuminousMaterial();
