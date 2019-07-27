@@ -698,7 +698,7 @@ main(int argc, const char **argv) {
 	fprintf(info, "Initializing Point Light\n");
 	ospSet3f(light_values[0], "position", 0.0, 0.9, 0.5);
 	ospSet1f(light_values[0], "radius", 0.0);
-	ospSet1f(light_values[0], "intensity", 10.0);
+	ospSet1f(light_values[0], "intensity", 1.0);
 	ospCommit(light_values[0]);
 	
 	fprintf(info, "Initializing Ambient Light\n");
@@ -743,6 +743,8 @@ main(int argc, const char **argv) {
 		float posyr, posyg, posyb;
 		float negzr, negzg, negzb;
 		float poszr, poszg, poszb;
+		float lightx, lighty, lightz;
+		float lightr, lightg, lightb, lightint;
 		
 		fprintf(info, "Waiting for request...\n");
 		
@@ -810,6 +812,13 @@ main(int argc, const char **argv) {
 		}
 		
 		if (fscanf(input, "%f %f %f", &poszr, &poszg, &poszb) != 3) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f %f %f %f %f", &lightx, &lighty, &lightz, &lightr, &lightg, &lightb, &lightint) != 7) {
 			fprintf(error, "Error: bad format\n");
 			fprintf(output, "9:error arg,");
 			fflush(output);
@@ -911,6 +920,11 @@ main(int argc, const char **argv) {
 		ospRelease(obj1Trans);
 		ospRelease(obj2Trans);
 		ospRelease(obj3Trans);
+		
+		ospSet3f(light_values[0], "position", lightx, lighty, lightz);
+		ospSet3f(light_values[0], "color", lightr, lightg, lightb);
+		ospSet1f(light_values[0], "intensity", lightint);
+		ospCommit(light_values[0]);
 		
 		ospSet3f(camera, "pos", px, py, pz);
 		ospSet3f(camera, "up", ux, uy, uz);

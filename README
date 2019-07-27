@@ -99,6 +99,19 @@ function makeMuralWall(options) {
 	return parts.join(',');
 };
 
+function makeMuralLight(options) {
+	const O = options;
+	
+	const parts = [
+		'light',
+		O.x, O.y, O.z,
+		O.r, O.g, O.b,
+		O.intensity,
+	];
+	
+	return parts.join(',');
+};
+
 function makeMuralURL(options) {
 	const O = options;
 	
@@ -113,6 +126,7 @@ function makeMuralURL(options) {
 		makeMuralWall(O.posy),
 		makeMuralWall(O.negz),
 		makeMuralWall(O.posz),
+		makeMuralLight(O.light),
 	];
 	
 	return makeTapestryURL({
@@ -180,11 +194,16 @@ const url = makeMuralURL({
 		name: 'posz',
 		r: 0.2, g: 0.2, b: 0.8,
 	},
+	light: {
+		x: 0.0, y: 0.9, z: 0.5,
+		r: 0.8, g: 0.1, b: 0.1,
+		intensity: 10.0,
+	},
 });
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass,negx,0.8,0.2,0.2,posx,0.2,0.8,0.2,negy,0.2,0.8,0.8,posy,0.8,0.8,0.8,negz,0.8,0.2,0.8,posz,0.2,0.2,0.8/0/0/-2/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass,negx,0.8,0.2,0.2,posx,0.2,0.8,0.2,negy,0.2,0.8,0.8,posy,0.8,0.8,0.8,negz,0.8,0.2,0.8,posz,0.2,0.2,0.8,light,0.0,0.9,0.5,0.8,0.1,0.1,10.0/0/0/-2/0/1/0/0/0/1/512/
 
 The scene has a fixed size and has limits on X, Y, and Z. Anything
 (camera or ball) can be put anywhere in this fixed space, but going
@@ -348,6 +367,13 @@ particular wall name and then 3 floats. The exact wall names are:
 An example specification for making the negx wall red is:
 
   negx,0.8,0.2,0.2
+
+
+Lights
+------
+
+There is currently only one controllable light source, a point
+light. Its position, color, and intensity can be changed.
 
 
 Miscellaneous Notes
