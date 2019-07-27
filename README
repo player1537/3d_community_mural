@@ -193,3 +193,37 @@ a line to the Makefile like:
   gen/Donut2.bin: rescale := --rescale
 
 And the next time you build Donut2.bin, it will be rescaled correctly.
+
+
+Miscellaneous Notes
+-------------------
+
+In the OSPRay code, it would be nice to be able create an instance with a different material than the instanced geometry. However, based on Instance.ispc in the OSPRay library, it only uses the instanced geometry's material.
+
+  https://github.com/ospray/ospray/blob/43a89186b4dc8a17dc130e3295ad96ddf69cb029/ospray/geometry/Instance.ispc#L41-L43
+
+OSPRay never explicitly defines what an affine3f is. You can find a struct definition in the ospray.h header file, but all you get is:
+
+  typedef struct { osp_vec3f vx, vy, vz; }                    osp_linear3f;
+  typedef struct { osp_linear3f l; osp_vec3f p; }             osp_affine3f;
+
+To get the real definition, you have to look at Instance.h:
+
+  Once created, a trianglemesh recognizes the following parameters
+  <pre>
+  float3 "xfm.l.vx" // 1st column of the affine transformation matrix
+  float3 "xfm.l.vy" // 1st column of the affine transformation matrix
+  float3 "xfm.l.vz" // 1st column of the affine transformation matrix
+  float3 "xfm.p"    // 4th column (translation) of the affine transformation matrix
+  OSPModel "model"  // model we're instancing
+
+(Side note: I think "trianglemesh" above should be "instance").
+
+A question I had is: why not just store the whole matrix? For affine transformations, you generally don't (never?) change the last row and leave it as 0, 0, 0, 1. In other words, for most use cases, your matrix will look like:
+
+       l.vx    l.vy    l.vz      p
+  [ [ XSCALE,      0,      0, XTRANS ]
+    [      0, YSCALE,      0, YTRANS ]
+    [      0,      0, ZSCALE, ZTRANS ]
+    [      0,      0,      0,      1 ] ]
+
