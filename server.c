@@ -614,7 +614,7 @@ main(int argc, const char **argv) {
 	OSPLight light_values[2];
 	OSPData lights;
 	OSPMaterial mirror, luminous, white, green, red, blue, yellow;
-	OSPGeometry top, left, back, right, bottom, front;
+	OSPGeometry posy, negx, posz, posx, negy, negz;
 	OSPMaterial *materials1, *materials2, *materials3;
 	OSPGeometry *geometries1, *geometries2, *geometries3;
 	OSPModel *models1, *models2, *models3;
@@ -634,12 +634,12 @@ main(int argc, const char **argv) {
 	}
 	
 	fprintf(info, "Creating Box\n");
-	top = makePosYGeometry(1.0, 1.0, 1.0);
-	left = makeNegXGeometry(1.0, 1.0, 1.0);
-	back = makePosZGeometry(1.0, 1.0, 1.0);
-	right = makePosXGeometry(1.0, 1.0, 1.0);
-	bottom = makeNegYGeometry(1.0, 1.0, 1.0);
-	front = makeNegZGeometry(1.0, 1.0, 1.0);
+	posy = makePosYGeometry(1.0, 1.0, 1.0);
+	negx = makeNegXGeometry(1.0, 1.0, 1.0);
+	posz = makePosZGeometry(1.0, 1.0, 1.0);
+	posx = makePosXGeometry(1.0, 1.0, 1.0);
+	negy = makeNegYGeometry(1.0, 1.0, 1.0);
+	negz = makeNegZGeometry(1.0, 1.0, 1.0);
 	
 	fprintf(info, "Creating Color Materials\n");
 	white = makeBasicMaterial(0.8, 0.8, 0.8);
@@ -691,33 +691,33 @@ main(int argc, const char **argv) {
 	renderer = ospNewRenderer("pathtracer");
 	
 	fprintf(info, "Initializing Box\n");
-	ospSetMaterial(top, white);
-	ospCommit(top);
+	ospSetMaterial(posy, white);
+	ospCommit(posy);
 	
-	ospSetMaterial(left, red);
-	ospCommit(left);
+	ospSetMaterial(negx, red);
+	ospCommit(negx);
 	
-	ospSetMaterial(back, blue);
-	ospCommit(back);
+	ospSetMaterial(posz, blue);
+	ospCommit(posz);
 	
-	ospSetMaterial(right, green);
-	ospCommit(right);
+	ospSetMaterial(posx, green);
+	ospCommit(posx);
 	
-	ospSetMaterial(bottom, yellow);
-	ospCommit(bottom);
+	ospSetMaterial(negy, yellow);
+	ospCommit(negy);
 	
-	ospSetMaterial(front, luminous);
-	ospCommit(front);
+	ospSetMaterial(negz, luminous);
+	ospCommit(negz);
 	(void)yellow;
 	(void)blue;
 	(void)mirror;
 	
 	fprintf(info, "Initializing Box Model\n");
-	ospAddGeometry(boxModel, top);
-	ospAddGeometry(boxModel, left);
-	ospAddGeometry(boxModel, back);
-	ospAddGeometry(boxModel, right);
-	ospAddGeometry(boxModel, bottom);
+	ospAddGeometry(boxModel, posy);
+	ospAddGeometry(boxModel, negx);
+	ospAddGeometry(boxModel, posz);
+	ospAddGeometry(boxModel, posx);
+	ospAddGeometry(boxModel, negy);
 	ospCommit(boxModel);
 	
 	fprintf(info, "Initializing Camera\n");
@@ -762,6 +762,9 @@ main(int argc, const char **argv) {
 		OSPGeometry obj1Geometry, obj2Geometry, obj3Geometry;
 		OSPMaterial obj1Material, obj2Material, obj3Material;
 		osp_affine3f obj1Transform, obj2Transform, obj3Transform;
+		OSPMaterial negxMaterial, posxMaterial;
+		OSPMaterial negyMaterial, posyMaterial;
+		OSPMaterial negzMaterial, poszMaterial;
 		float px, py, pz, ux, uy, uz, vx, vy, vz;
 		int quality;
 		float bx1, by1, bz1, bsx1, bsy1, bsz1;
@@ -770,6 +773,12 @@ main(int argc, const char **argv) {
 		int matid2, objid2;
 		float bx3, by3, bz3, bsx3, bsy3, bsz3;
 		int matid3, objid3;
+		float negxr, negxg, negxb;
+		float posxr, posxg, posxb;
+		float negyr, negyg, negyb;
+		float posyr, posyg, posyb;
+		float negzr, negzg, negzb;
+		float poszr, poszg, poszb;
 		
 		fprintf(info, "Waiting for request...\n");
 		
@@ -795,6 +804,48 @@ main(int argc, const char **argv) {
 		}
 		
 		if (fscanf(input, "%f %f %f %f %f %f %d %d", &bx3, &by3, &bz3, &bsx3, &bsy3, &bsz3, &matid3, &objid3) != 8) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f", &negxr, &negxg, &negxb) != 3) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f", &negyr, &negyg, &negyb) != 3) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f", &negzr, &negzg, &negzb) != 3) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f", &posxr, &posxg, &posxb) != 3) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f", &posyr, &posyg, &posyb) != 3) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f", &poszr, &poszg, &poszb) != 3) {
 			fprintf(error, "Error: bad format\n");
 			fprintf(output, "9:error arg,");
 			fflush(output);
@@ -855,6 +906,31 @@ main(int argc, const char **argv) {
 
 		obj3Trans = ospNewInstance(obj3Model, &obj3Transform);
 		ospCommit(obj3Trans);
+		
+		negxMaterial = makeBasicMaterial(negxr, negxg, negxb);
+		posxMaterial = makeBasicMaterial(posxr, posxg, posxb);
+		negyMaterial = makeBasicMaterial(negyr, negyg, negyb);
+		posyMaterial = makeBasicMaterial(posyr, posyg, posyb);
+		negzMaterial = makeBasicMaterial(negzr, negzg, negzb);
+		poszMaterial = makeBasicMaterial(poszr, poszg, poszb);
+		
+		ospSetMaterial(negx, negxMaterial);
+		ospCommit(negx);
+		
+		ospSetMaterial(posx, posxMaterial);
+		ospCommit(posx);
+		
+		ospSetMaterial(negy, negyMaterial);
+		ospCommit(negy);
+		
+		ospSetMaterial(posy, posyMaterial);
+		ospCommit(posy);
+		
+		ospSetMaterial(negz, negzMaterial);
+		ospCommit(negz);
+		
+		ospSetMaterial(posz, poszMaterial);
+		ospCommit(posz);
 		
 		model = ospNewModel();
 		ospAddGeometry(model, obj1Trans);

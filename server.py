@@ -143,6 +143,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		matid1 = matid2 = matid3 = None
 		objid1 = objid2 = objid3 = None
 		
+		negxr = negxg = negxb = None
+		posxr = posxg = posxb = None
+		negyr = negyg = negyb = None
+		posyr = posyg = posyb = None
+		negzr = negzg = negzb = None
+		poszr = poszg = poszb = None
+		
 		it = iter(what.split(','))
 		type = next(it)
 		if type == 'scene':
@@ -174,6 +181,30 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsy3 = float(next(it))
 					bsz3 = float(next(it))
 					matid3 = _g_materials.lookup(next(it))
+				elif k == 'negx':
+					negxr = float(next(it))
+					negxg = float(next(it))
+					negxb = float(next(it))
+				elif k == 'posx':
+					posxr = float(next(it))
+					posxg = float(next(it))
+					posxb = float(next(it))
+				elif k == 'negy':
+					negyr = float(next(it))
+					negyg = float(next(it))
+					negyb = float(next(it))
+				elif k == 'posy':
+					posyr = float(next(it))
+					posyg = float(next(it))
+					posyb = float(next(it))
+				elif k == 'negz':
+					negzr = float(next(it))
+					negzg = float(next(it))
+					negzb = float(next(it))
+				elif k == 'posz':
+					poszr = float(next(it))
+					poszg = float(next(it))
+					poszb = float(next(it))
 				else:
 					print(f'bad scene type {k!r}')
 					raise NotImplementedError
@@ -197,12 +228,24 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			b'%f %f %f %f %f %f %f %f %f %d '
 			b'%f %f %f %f %f %f %d %d '
 			b'%f %f %f %f %f %f %d %d '
-			b'%f %f %f %f %f %f %d %d'
+			b'%f %f %f %f %f %f %d %d '
+			b'%f %f %f '
+			b'%f %f %f '
+			b'%f %f %f '
+			b'%f %f %f '
+			b'%f %f %f '
+			b'%f %f %f '
 		) % (
 			x, y, z, ux, uy, uz, vx, vy, vz, quality,
 			bx1, by1, bz1, bsx1, bsy1, bsz1, matid1, objid1,
 			bx2, by2, bz2, bsx2, bsy2, bsz2, matid2, objid2,
 			bx3, by3, bz3, bsx3, bsy3, bsz3, matid3, objid3,
+			negxr, negxg, negxb,
+			posxr, posxg, posxb,
+			negyr, negyg, negyb,
+			posyr, posyg, posyb,
+			negzr, negzg, negzb,
+			poszr, poszg, poszb,
 		)
 		
 		with _g_subprocess.lock:

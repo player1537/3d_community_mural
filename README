@@ -88,6 +88,17 @@ function makeMuralObject(options) {
 	return parts.join(',');
 };
 
+function makeMuralWall(options) {
+	const O = options;
+	
+	const parts = [
+		O.name,
+		O.r, O.g, O.b,
+	];
+	
+	return parts.join(',');
+};
+
 function makeMuralURL(options) {
 	const O = options;
 	
@@ -96,6 +107,12 @@ function makeMuralURL(options) {
 		makeMuralObject(O.obj1),
 		makeMuralObject(O.obj2),
 		makeMuralObject(O.obj3),
+		makeMuralWall(O.negx),
+		makeMuralWall(O.posx),
+		makeMuralWall(O.negy),
+		makeMuralWall(O.posy),
+		makeMuralWall(O.negz),
+		makeMuralWall(O.posz),
 	];
 	
 	return makeTapestryURL({
@@ -139,11 +156,35 @@ const url = makeMuralURL({
 		bsx: 1.0, bsy: 2.0, bsz: 1.0,
 		material: 'Brass',
 	},
+	negx: {
+		name: 'negx',
+		r: 0.8, g: 0.2, b: 0.2,
+	},
+	posx: {
+		name: 'posx',
+		r: 0.2, g: 0.8, b: 0.2,
+	},
+	negy: {
+		name: 'negy',
+		r: 0.2, g: 0.8, b: 0.8,
+	},
+	posy: {
+		name: 'posy',
+		r: 0.8, g: 0.8, b: 0.8,
+	},
+	negz: {
+		name: 'negz',
+		r: 0.8, g: 0.2, b: 0.8,
+	},
+	posz: {
+		name: 'posz',
+		r: 0.2, g: 0.2, b: 0.8,
+	},
 });
 
 This results in:
 
-  http://accona.eecs.utk.edu:8802/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass/0/0/-2/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass,negx,0.8,0.2,0.2,posx,0.2,0.8,0.2,negy,0.2,0.8,0.8,posy,0.8,0.8,0.8,negz,0.8,0.2,0.8,posz,0.2,0.2,0.8/0/0/-2/0/1/0/0/0/1/512/
 
 The scene has a fixed size and has limits on X, Y, and Z. Anything
 (camera or ball) can be put anywhere in this fixed space, but going
@@ -263,11 +304,15 @@ Then when you reload the server, you can refer to it by the name "Red".
 Models
 ------
 
-There is a list of preloaded OBJ models. They are referenced by name with internal spaces removed. The current list of models is:
+There is a list of preloaded OBJ models. They are referenced by name
+with internal spaces removed. The current list of models is:
 
   Donut     Platonic
 
-They are passed to OSPRay in almost exactly the same way as materials. Like materials, there's a variable to say how many models to load, and a variable for each model that specifies the path to load from.
+They are passed to OSPRay in almost exactly the same way as
+materials. Like materials, there's a variable to say how many models
+to load, and a variable for each model that specifies the path to
+load from.
 
   nobj: Number of objects to load (e.g. 12).
   obj_0: First object.
@@ -275,7 +320,8 @@ They are passed to OSPRay in almost exactly the same way as materials. Like mate
   ...
   obj_11: Last object.
 
-Each of the obj_ variables is a pair of name and path, separated by spaces. For example, Donut's value is:
+Each of the obj_ variables is a pair of name and path, separated by
+spaces. For example, Donut's value is:
 
   Donut gen/Donut2.bin
 
@@ -283,9 +329,25 @@ These fields are:
 
   Name, Path
 
-These environment variables are loaded from an objs.txt file in the root of the project. You can add your own model by appending lines to objs.txt. For example:
+These environment variables are loaded from an objs.txt file in the
+root of the project. You can add your own model by appending lines
+to objs.txt. For example:
 
   Platonic  gen/Platonic2.bin
+
+
+Walls
+-----
+
+You can change the color of each wall to any RGB color. Each wall
+is labeled as {Neg,Pos}{X,Y,Z}. In the scene URL, you would give a
+particular wall name and then 3 floats. The exact wall names are:
+
+  negx negy negz posx posy posz
+
+An example specification for making the negx wall red is:
+
+  negx,0.8,0.2,0.2
 
 
 Miscellaneous Notes
