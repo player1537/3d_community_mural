@@ -133,3 +133,63 @@ outside of it (e.g. X=3.5) will not work as expected.
   X: -1 (left) to +1 (right)
   Y: -1 (bottom) to +1 (top)
   Z: 0 (camera plane) to +1 (far end of the box)
+
+
+Using OBJ Models
+----------------
+
+OSPRay natively supports triangle meshes. However, parsing OBJ files in
+C isn't the most straightforward thing, and it adds to the processing
+time. Instead, it is easier to make use of a preprocessing step to
+convert the OBJ file into a raw binary file.
+
+The mechanism to do this is in the obj_to_bin.py script, which uses
+PyWavefront to parse the OBJ and MTL files.
+
+The binary format is unique but simple:
+
+  <header> := <u8 has_vertex> <u8 has_index> <u8 has_extra1> <u8 has_extra2>
+  <vertex> := <i32 nvertex> { <f32 x> <f32 y> <f32 z> } ... (nvertex times)
+  <index> := <i32 nindex> { <i32 i> <i32 j> <i32 k> } ... (nindex times)
+  <extra1> := (unused)
+  <extra2> := (unused)
+  <data> := <header> \
+            ( <vertex> if has_vertex ) \
+            ( <index> if has_index ) \
+            ( <extra1> if has_extra1 ) \
+            ( <extra2> if has_extra2 )
+
+has_vertex is either 'V' or '<spc>'. has_index is either 'I' or
+'<spc>'. has_extra1 and has_extra2 aren't defined yet, so they are
+currently both '<spc>'.
+
+A Makefile exists to help convert the models more easily. To run it,
+make sure all the models (and their MTL files) are in the models/
+directory, then just run make to convert them all.
+
+  $ tree models/
+  models/
+  ├── Donut2.mtl
+  ├── Donut2.obj
+  ├── Platonic2.mtl
+  └── Platonic2.obj
+  
+  0 directories, 4 files
+  $ make
+  ./go.sh python obj_to_bin.py --output gen/Platonic2.bin models/Platonic2.obj
+  ./go.sh python obj_to_bin.py --output gen/Donut2.bin models/Donut2.obj --rescale
+  $ tree gen
+  gen
+  ├── Donut2.bin
+  └── Platonic2.bin
+  
+  0 directories, 2 files
+
+Inside the Makefile, you can specify if you want the model
+rescaled. This will make it fit within a -1 to 1 sized box (keeping
+aspect ratio). To enable it for a model (like Donut2), you would add
+a line to the Makefile like:
+
+  gen/Donut2.bin: rescale := --rescale
+
+And the next time you build Donut2.bin, it will be rescaled correctly.
