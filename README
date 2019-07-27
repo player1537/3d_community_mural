@@ -79,9 +79,10 @@ function makeMuralURL(options) {
 	
 	const sceneParts = [
 		'scene',
-		'ball',
-		O.bx, O.by, O.bz,  // ball position
-		O.bsx, O.bsy, O.bsz,  // ball scale
+		'obj',  // "object properties will follow"
+		O.object,  // what object/model to use
+		O.bx, O.by, O.bz,  // object position
+		O.bsx, O.bsy, O.bsz,  // object scale
 		O.material,  // ball material
 	];
 	
@@ -102,6 +103,7 @@ For example, you could use this to construct a render looking directly
 at a ball, that is directly in the center of the scene.
 
 const url = makeMuralURL({
+	object: 'Donut2',
 	bx: 0.0, by: 0.0, bz: 0.5,
 	bsx: 1.0, bsy: 2.0, bsz: 1.0,
 	material: 'Emerald',
@@ -112,13 +114,14 @@ const url = makeMuralURL({
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,ball,0.5,0.1,0.5,1.0,2.0,1.0,Emerald/0/0/-2/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,obj,Donut2,0.5,0.1,0.5,1.0,2.0,1.0,Emerald/0/0/-2/0/1/0/0/0/1/512/
 
 Likewise, we could make the ball move around in a circle in the
 viewport:
 
 for (let i=0; i<100; ++i) {
 	const url = makeMuralURL({
+		object: 'Donut2',
 		bx: Math.cos(2 * Math.PI * i / 100),
 		by: Math.sin(2 * Math.PI * i / 100),
 		bz: 0.5,
@@ -141,8 +144,8 @@ outside of it (e.g. X=3.5) will not work as expected.
   Z: 0 (camera plane) to +1 (far end of the box)
 
 
-Using OBJ Models
-----------------
+Creating OBJ Models
+-------------------
 
 OSPRay natively supports triangle meshes. However, parsing OBJ files in
 C isn't the most straightforward thing, and it adds to the processing
@@ -245,6 +248,34 @@ might look like:
   Red  0.8 0 0  1  0.4 0 0  10
 
 Then when you reload the server, you can refer to it by the name "Red".
+
+
+Models
+------
+
+There is a list of preloaded OBJ models. They are referenced by name with internal spaces removed. The current list of models is:
+
+  Donut2    Platonic2
+
+They are passed to OSPRay in almost exactly the same way as materials. Like materials, there's a variable to say how many models to load, and a variable for each model that specifies the path to load from.
+
+  nobj: Number of objects to load (e.g. 12).
+  obj_0: First object.
+  obj_1: Second object.
+  ...
+  obj_11: Last object.
+
+Each of the obj_ variables is a pair of name and path, separated by spaces. For example, Donut2's value is:
+
+  Donut2 gen/Donut2.bin
+
+These fields are:
+
+  Name, Path
+
+These environment variables are loaded from an objs.txt file in the root of the project. You can add your own model by appending lines to objs.txt. For example:
+
+  Platonic2  gen/Platonic2.bin
 
 
 Miscellaneous Notes
