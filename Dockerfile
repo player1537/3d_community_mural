@@ -36,6 +36,8 @@ FROM base AS dist
 WORKDIR /opt/app
 COPY server.py ./
 COPY static ./static
+COPY gen ./gen
+COPY materials.txt objs.txt ./
 
-ENTRYPOINT ["python3.7", "-u", "server.py", "--port=8801", "/opt/app/server"]
+ENTRYPOINT ["python3.7", "-u", "server.py", "--port=8801", "/opt/app/server", "--materials", "materials.txt", "--objs", "objs.txt"]
 CMD []
