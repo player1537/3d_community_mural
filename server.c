@@ -609,12 +609,15 @@ main(int argc, const char **argv) {
 	OSPError err;
 	OSPFrameBuffer frameBuffer;
 	OSPRenderer renderer;
-	OSPModel boxModel, *models;
+	OSPModel boxModel;
 	OSPCamera camera;
 	OSPLight light_values[2];
 	OSPData lights;
-	OSPMaterial mirror, luminous, white, green, red, blue, yellow, *materials;
-	OSPGeometry top, left, back, right, bottom, front, *geometries;
+	OSPMaterial mirror, luminous, white, green, red, blue, yellow;
+	OSPGeometry top, left, back, right, bottom, front;
+	OSPMaterial *materials1, *materials2, *materials3;
+	OSPGeometry *geometries1, *geometries2, *geometries3;
+	OSPModel *models1, *models2, *models3;
 	osp_vec2i size;
 	const void *pixels;
 	
@@ -646,18 +649,22 @@ main(int argc, const char **argv) {
 	yellow = makeBasicMaterial(0.1, 0.8, 0.8);
 	
 	fprintf(info, "Creating Preloaded Materials\n");
-	materials = makePreloadedMaterials();
-	if (materials == NULL) {
+	materials1 = makePreloadedMaterials();
+	if (materials1 == NULL) {
 		fprintf(error, "Error: failed to load materials\n");
 		return 1;
 	}
+	materials2 = makePreloadedMaterials();
+	materials3 = makePreloadedMaterials();
 	
 	fprintf(info, "Creating Preloaded Geometries\n");
-	geometries = makePreloadedGeometries(&models);
-	if (geometries == NULL) {
+	geometries1 = makePreloadedGeometries(&models1);
+	if (geometries1 == NULL) {
 		fprintf(error, "Error: failed to load geometries\n");
 		return 1;
 	}
+	geometries2 = makePreloadedGeometries(&models2);
+	geometries3 = makePreloadedGeometries(&models3);
 	
 	fprintf(info, "Creating Mirror Material\n");
 	mirror = makeMirrorMaterial();
@@ -747,18 +754,47 @@ main(int argc, const char **argv) {
 	
 	fprintf(info, "Entering render loop\n");
 	for (;;) {
-		OSPModel model, objModel;
-		OSPGeometry objTrans, boxTrans, objGeometry;
-		OSPMaterial objMaterial;
-		osp_affine3f objTransform, boxTransform;
+		OSPModel model;
+		OSPGeometry boxTrans;
+		osp_affine3f boxTransform;
+		OSPModel obj1Model, obj2Model, obj3Model;
+		OSPGeometry obj1Trans, obj2Trans, obj3Trans;
+		OSPGeometry obj1Geometry, obj2Geometry, obj3Geometry;
+		OSPMaterial obj1Material, obj2Material, obj3Material;
+		osp_affine3f obj1Transform, obj2Transform, obj3Transform;
 		float px, py, pz, ux, uy, uz, vx, vy, vz;
 		int quality;
-		float bx, by, bz, bsx, bsy, bsz;
-		int matid, objid;
+		float bx1, by1, bz1, bsx1, bsy1, bsz1;
+		int matid1, objid1;
+		float bx2, by2, bz2, bsx2, bsy2, bsz2;
+		int matid2, objid2;
+		float bx3, by3, bz3, bsx3, bsy3, bsz3;
+		int matid3, objid3;
 		
 		fprintf(info, "Waiting for request...\n");
 		
-		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality, &bx, &by, &bz, &bsx, &bsy, &bsz, &matid, &objid) != 18) {
+		if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d", &px, &py, &pz, &ux, &uy, &uz, &vx, &vy, &vz, &quality) != 10) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f %f %f %f %d %d", &bx1, &by1, &bz1, &bsx1, &bsy1, &bsz1, &matid1, &objid1) != 8) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f %f %f %f %d %d", &bx2, &by2, &bz2, &bsx2, &bsy2, &bsz2, &matid2, &objid2) != 8) {
+			fprintf(error, "Error: bad format\n");
+			fprintf(output, "9:error arg,");
+			fflush(output);
+			continue;
+		}
+		
+		if (fscanf(input, "%f %f %f %f %f %f %d %d", &bx3, &by3, &bz3, &bsx3, &bsy3, &bsz3, &matid3, &objid3) != 8) {
 			fprintf(error, "Error: bad format\n");
 			fprintf(output, "9:error arg,");
 			fflush(output);
@@ -767,31 +803,63 @@ main(int argc, const char **argv) {
 		
 		fprintf(info, "Got request\n");
 		
-		objTransform.l.vx = (osp_vec3f){ bsx,   0, 0   };
-		objTransform.l.vy = (osp_vec3f){   0, bsy, 0   };
-		objTransform.l.vz = (osp_vec3f){   0,   0, bsz };
-		objTransform.p = (osp_vec3f){ bx, by, bz };
-		
 		boxTransform.l.vx = (osp_vec3f){ 1, 0, 0 };
 		boxTransform.l.vy = (osp_vec3f){ 0, 1, 0 };
 		boxTransform.l.vz = (osp_vec3f){ 0, 0, 1 };
 		boxTransform.p = (osp_vec3f){ 0, 0, 0 };
 		
-		objModel = models[objid];
-		objGeometry = geometries[objid];
-		objMaterial = materials[matid];
-		
-		ospSetMaterial(objGeometry, objMaterial);
-		ospCommit(objGeometry);
-
-		objTrans = ospNewInstance(objModel, &objTransform);
-		ospCommit(objTrans);
-		
 		boxTrans = ospNewInstance(boxModel, &boxTransform);
 		ospCommit(boxTrans);
 		
+		obj1Transform.l.vx = (osp_vec3f){ bsx1,    0,    0 };
+		obj1Transform.l.vy = (osp_vec3f){    0, bsy1,    0 };
+		obj1Transform.l.vz = (osp_vec3f){    0,    0, bsz1 };
+		obj1Transform.p = (osp_vec3f){ bx1, by1, bz1 };
+		
+		obj1Model = models1[objid1];
+		obj1Geometry = geometries1[objid1];
+		obj1Material = materials1[matid1];
+		
+		ospSetMaterial(obj1Geometry, obj1Material);
+		ospCommit(obj1Geometry);
+
+		obj1Trans = ospNewInstance(obj1Model, &obj1Transform);
+		ospCommit(obj1Trans);
+		
+		obj2Transform.l.vx = (osp_vec3f){ bsx2,    0,    0 };
+		obj2Transform.l.vy = (osp_vec3f){    0, bsy2,    0 };
+		obj2Transform.l.vz = (osp_vec3f){    0,    0, bsz2 };
+		obj2Transform.p = (osp_vec3f){ bx2, by2, bz2 };
+		
+		obj2Model = models2[objid2];
+		obj2Geometry = geometries2[objid2];
+		obj2Material = materials2[matid2];
+		
+		ospSetMaterial(obj2Geometry, obj2Material);
+		ospCommit(obj2Geometry);
+
+		obj2Trans = ospNewInstance(obj2Model, &obj2Transform);
+		ospCommit(obj2Trans);
+		
+		obj3Transform.l.vx = (osp_vec3f){ bsx3,    0,    0 };
+		obj3Transform.l.vy = (osp_vec3f){    0, bsy3,    0 };
+		obj3Transform.l.vz = (osp_vec3f){    0,    0, bsz3 };
+		obj3Transform.p = (osp_vec3f){ bx3, by3, bz3 };
+		
+		obj3Model = models3[objid3];
+		obj3Geometry = geometries3[objid3];
+		obj3Material = materials3[matid3];
+		
+		ospSetMaterial(obj3Geometry, obj3Material);
+		ospCommit(obj3Geometry);
+
+		obj3Trans = ospNewInstance(obj3Model, &obj3Transform);
+		ospCommit(obj3Trans);
+		
 		model = ospNewModel();
-		ospAddGeometry(model, objTrans);
+		ospAddGeometry(model, obj1Trans);
+		ospAddGeometry(model, obj2Trans);
+		ospAddGeometry(model, obj3Trans);
 		ospAddGeometry(model, boxTrans);
 		ospCommit(model);
 		
@@ -800,7 +868,9 @@ main(int argc, const char **argv) {
 		
 		ospRelease(model);
 		ospRelease(boxTrans);
-		ospRelease(objTrans);
+		ospRelease(obj1Trans);
+		ospRelease(obj2Trans);
+		ospRelease(obj3Trans);
 		
 		ospSet3f(camera, "pos", px, py, pz);
 		ospSet3f(camera, "up", ux, uy, uz);

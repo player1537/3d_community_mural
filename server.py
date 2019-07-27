@@ -132,21 +132,48 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		vx, vy, vz = map(float, (vx, vy, vz))
 		quality = int(quality)
 		
-		bx = by = bz = None
+		bx1 = by1 = bz1 = None
+		bx2 = by2 = bz2 = None
+		bx3 = by3 = bz3 = None
+		
+		bsx1 = bsy1 = bsz1 = None
+		bsx2 = bsy2 = bsz2 = None
+		bsx3 = bsy3 = bsz3 = None
+		
+		matid1 = matid2 = matid3 = None
+		objid1 = objid2 = objid3 = None
 		
 		it = iter(what.split(','))
 		type = next(it)
 		if type == 'scene':
 			for k in it:
-				if k == 'obj':
-					objid = _g_objs.lookup(next(it))
-					bx = float(next(it))
-					by = float(next(it))
-					bz = float(next(it))
-					bsx = float(next(it))
-					bsy = float(next(it))
-					bsz = float(next(it))
-					matid = _g_materials.lookup(next(it))
+				if k == 'obj1':
+					objid1 = _g_objs.lookup(next(it))
+					bx1 = float(next(it))
+					by1 = float(next(it))
+					bz1 = float(next(it))
+					bsx1 = float(next(it))
+					bsy1 = float(next(it))
+					bsz1 = float(next(it))
+					matid1 = _g_materials.lookup(next(it))
+				elif k == 'obj2':
+					objid2 = _g_objs.lookup(next(it))
+					bx2 = float(next(it))
+					by2 = float(next(it))
+					bz2 = float(next(it))
+					bsx2 = float(next(it))
+					bsy2 = float(next(it))
+					bsz2 = float(next(it))
+					matid2 = _g_materials.lookup(next(it))
+				elif k == 'obj3':
+					objid3 = _g_objs.lookup(next(it))
+					bx3 = float(next(it))
+					by3 = float(next(it))
+					bz3 = float(next(it))
+					bsx3 = float(next(it))
+					bsy3 = float(next(it))
+					bsz3 = float(next(it))
+					matid3 = _g_materials.lookup(next(it))
 				else:
 					print(f'bad scene type {k!r}')
 					raise NotImplementedError
@@ -164,10 +191,18 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		tile_index = int(tile_index)
 		num_tiles = int(num_tiles)
 		n_cols = int(sqrt(num_tiles))
-		assert bx is not None and by is not None and bz is not None, f'{bx!r} {by!r} {bz!r}'
+		assert bx1 is not None and by1 is not None and bz1 is not None, f'{bx1!r} {by1!r} {bz1!r}'
 		
-		query = b'%f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %d %d' % (
-			x, y, z, ux, uy, uz, vx, vy, vz, quality, bx, by, bz, bsx, bsy, bsz, matid, objid,
+		query = (
+			b'%f %f %f %f %f %f %f %f %f %d '
+			b'%f %f %f %f %f %f %d %d '
+			b'%f %f %f %f %f %f %d %d '
+			b'%f %f %f %f %f %f %d %d'
+		) % (
+			x, y, z, ux, uy, uz, vx, vy, vz, quality,
+			bx1, by1, bz1, bsx1, bsy1, bsz1, matid1, objid1,
+			bx2, by2, bz2, bsx2, bsy2, bsz2, matid2, objid2,
+			bx3, by3, bz3, bsx3, bsy3, bsz3, matid3, objid3,
 		)
 		
 		with _g_subprocess.lock:

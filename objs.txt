@@ -1,2 +1,2 @@
-Donut2 gen/Donut2.bin
-Platonic2 gen/Platonic2.bin
+Donut gen/Donut2.bin
+Platonic gen/Platonic2.bin

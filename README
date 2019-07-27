@@ -74,16 +74,28 @@ function makeTapestryURL(options) {
 	return parts.join('/');
 }
 
+function makeMuralObject(options) {
+	const O = options;
+	
+	const parts = [
+		'obj' + O.number,  // e.g. "obj1"
+		O.object,  // what object/model to use
+		O.bx, O.by, O.bz,  // object position
+		O.bsx, O.bsy, O.bsz,  // object scale
+		O.material,  // ball material
+	];
+	
+	return parts.join(',');
+};
+
 function makeMuralURL(options) {
 	const O = options;
 	
 	const sceneParts = [
 		'scene',
-		'obj',  // "object properties will follow"
-		O.object,  // what object/model to use
-		O.bx, O.by, O.bz,  // object position
-		O.bsx, O.bsy, O.bsz,  // object scale
-		O.material,  // ball material
+		makeMuralObject(O.obj1),
+		makeMuralObject(O.obj2),
+		makeMuralObject(O.obj3),
 	];
 	
 	return makeTapestryURL({
@@ -103,37 +115,35 @@ For example, you could use this to construct a render looking directly
 at a ball, that is directly in the center of the scene.
 
 const url = makeMuralURL({
-	object: 'Donut2',
-	bx: 0.0, by: 0.0, bz: 0.5,
-	bsx: 1.0, bsy: 2.0, bsz: 1.0,
-	material: 'Emerald',
 	cameraHorizontal: 0.0,
 	cameraVertical: 0.0,
 	quality: 512,
+	obj1: {
+		number: 1,
+		object: 'Donut',
+		bx: 0.0, by: 0.0, bz: 0.5,
+		bsx: 1.0, bsy: 2.0, bsz: 1.0,
+		material: 'Emerald',
+	},
+	obj2: {
+		number: 2,
+		object: 'Platonic',
+		bx: 0.5, by: 0.0, bz: 0.5,
+		bsx: 1.0, bsy: 2.0, bsz: 1.0,
+		material: 'Emerald',
+	},
+	obj3: {
+		number: 3,
+		object: 'Donut',
+		bx: 0.0, by: 0.5, bz: 0.5,
+		bsx: 1.0, bsy: 2.0, bsz: 1.0,
+		material: 'Brass',
+	},
 });
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,obj,Donut2,0.5,0.1,0.5,1.0,2.0,1.0,Emerald/0/0/-2/0/1/0/0/0/1/512/
-
-Likewise, we could make the ball move around in a circle in the
-viewport:
-
-for (let i=0; i<100; ++i) {
-	const url = makeMuralURL({
-		object: 'Donut2',
-		bx: Math.cos(2 * Math.PI * i / 100),
-		by: Math.sin(2 * Math.PI * i / 100),
-		bz: 0.5,
-		bsx: 1.0, bsy: 1.0, bsz: 1.0,
-		material: 'Emerald',
-		cameraHorizontal: 0.0,
-		cameraVertical: 0.0,
-		quality: 512,
-	});
-	
-	// set an <img> tag's src to this url
-}
+  http://accona.eecs.utk.edu:8802/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass/0/0/-2/0/1/0/0/0/1/512/
 
 The scene has a fixed size and has limits on X, Y, and Z. Anything
 (camera or ball) can be put anywhere in this fixed space, but going
@@ -255,7 +265,7 @@ Models
 
 There is a list of preloaded OBJ models. They are referenced by name with internal spaces removed. The current list of models is:
 
-  Donut2    Platonic2
+  Donut     Platonic
 
 They are passed to OSPRay in almost exactly the same way as materials. Like materials, there's a variable to say how many models to load, and a variable for each model that specifies the path to load from.
 
@@ -265,9 +275,9 @@ They are passed to OSPRay in almost exactly the same way as materials. Like mate
   ...
   obj_11: Last object.
 
-Each of the obj_ variables is a pair of name and path, separated by spaces. For example, Donut2's value is:
+Each of the obj_ variables is a pair of name and path, separated by spaces. For example, Donut's value is:
 
-  Donut2 gen/Donut2.bin
+  Donut gen/Donut2.bin
 
 These fields are:
 
@@ -275,7 +285,7 @@ These fields are:
 
 These environment variables are loaded from an objs.txt file in the root of the project. You can add your own model by appending lines to objs.txt. For example:
 
-  Platonic2  gen/Platonic2.bin
+  Platonic  gen/Platonic2.bin
 
 
 Miscellaneous Notes
