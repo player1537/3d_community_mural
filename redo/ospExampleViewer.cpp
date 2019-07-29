@@ -42,20 +42,165 @@ namespace ospray {
       myfoo->write(data, size);
     }
 
+    OSPGeometry
+    makeOBJGeometry(const char *filename) {
+      OSPGeometry geometry;
+      OSPData vertex_data, index_data;
+      int nvertex, nindex;
+      float *vertices;
+      int *indices;
+      FILE *f;
+      char c;
+      size_t sz;
+      int has_vertex, has_index, has_extra1, has_extra2;
+      
+      f = fopen(filename, "rb");
+      
+      (void)fread(&c, sizeof(c), 1, f);
+      has_vertex = c == 'V';
+      
+      (void)fread(&c, sizeof(c), 1, f);
+      has_index = c == 'I';
+      
+      (void)fread(&c, sizeof(c), 1, f);
+      has_extra1 = c == '?';
+      
+      (void)fread(&c, sizeof(c), 1, f);
+      has_extra2 = c == '?';
+    
+      if (!has_vertex) goto error;
+      if (!has_index) goto error;
+      if (has_extra1) goto error;
+      if (has_extra2) goto error;
+      
+      vertices = NULL;
+      if (has_vertex) {
+        (void)fread(&nvertex, sizeof(nvertex), 1, f);
+        sz = (size_t)nvertex * 3;
+        vertices = (float *)malloc(sz * sizeof(*vertices));
+        (void)fread(vertices, sizeof(*vertices), sz, f);
+        vertex_data = ospNewData(nvertex, OSP_FLOAT3, vertices, OSP_DATA_SHARED_BUFFER);
+        ospCommit(vertex_data);
+      }
+      
+      indices = NULL;
+      if (has_index) {
+        (void)fread(&nindex, sizeof(nindex), 1, f);
+        sz = (size_t)nindex * 3;
+        indices = (int *)malloc(sz * sizeof(*indices));
+        (void)fread(indices, sizeof(*indices), sz, f);
+        index_data = ospNewData(nindex, OSP_INT3, indices, OSP_DATA_SHARED_BUFFER);
+        ospCommit(index_data);
+      }
+      
+      geometry = ospNewGeometry("triangles");
+      if (has_vertex) {
+        ospSetData(geometry, "vertex", vertex_data);
+        ospRelease(vertex_data);
+      }
+      if (has_index) {
+        ospSetData(geometry, "index", index_data);
+        ospRelease(index_data);
+      }
+      ospCommit(geometry);
+      
+    error:
+      fclose(f);
+      
+      return geometry;
+    }
+    
+    
+    OSPMaterial *
+    makePreloadedMaterials(void) {
+      OSPMaterial *materials, material;
+      int nmaterial;
+      char *s, name[32];
+      int i;
+      float Kdr, Kdg, Kdb, d, Ksr, Ksg, Ksb, Ns;
+      
+      s = getenv("nmat");
+      if (s == NULL) {
+        nmaterial = 0;
+      } else if (sscanf(s, "%d", &nmaterial) != 1) {
+        return NULL;
+      }
+      
+      materials = (OSPMaterial *)malloc(nmaterial * sizeof(*materials));
+      
+      for (i=0; i<nmaterial; ++i) {
+        snprintf(name, sizeof(name), "mat_%d", i);
+        s = getenv(name);
+        if (sscanf(s, "%*s %f %f %f %f %f %f %f %f", &Kdr, &Kdg, &Kdb, &d, &Ksr, &Ksg, &Ksb, &Ns) != 8) {
+          return NULL;
+        }
+        
+        material = ospNewMaterial2("pathtracer", "OBJMaterial");
+        ospSet3f(material, "Kd", Kdr, Kdg, Kdb);
+        ospSet1f(material, "d", d);
+        ospSet3f(material, "Ks", Ksr, Ksg, Ksb);
+        ospSet1f(material, "Ns", Ns);
+        ospCommit(material);
+        
+        materials[i] = material;
+      }
+      
+      return materials;
+    }
+    
+    
+    OSPGeometry *
+    makePreloadedGeometries(OSPModel **out_models) {
+      OSPGeometry *geometries, geometry;
+      OSPModel *models, model;
+      int i, nobj;
+      char *s, name[32];
+      
+      s = getenv("nobj");
+      if (s == NULL) {
+        nobj = 0;
+      } else if (sscanf(s, "%d", &nobj) != 1) {
+        return NULL;
+      }
+      
+      geometries = (OSPGeometry *)malloc(nobj * sizeof(*geometries));
+      models = (OSPModel *)malloc(nobj * sizeof(*models));
+      
+      for (i=0; i<nobj; ++i) {
+        snprintf(name, sizeof(name), "obj_%d", i);
+        s = getenv(name);
+        
+        // We get a string like "Name Path" and we want the
+        // path to load the object
+        s = strrchr(s, ' ') + 1;
+        
+        geometry = makeOBJGeometry(s);
+        
+        model = ospNewModel();
+        ospAddGeometry(model, geometry);
+        ospCommit(model);
+        
+        geometries[i] = geometry;
+        models[i] = model;
+      }
+      
+      *out_models = models;
+      return geometries;
+    }
+
     class OSPExampleViewer : public OSPApp
     {
       void render(const std::shared_ptr<sg::Frame> &) override;
       int parseCommandLine(int &ac, const char **&av) override;
-      int tapestryLoop(OSPRenderer, OSPCamera);
+      int tapestryLoop(OSPRenderer, OSPCamera, OSPModel);
 
       std::string fileName {"./aout.jpeg"};
     };
 
-    int OSPExampleViewer::tapestryLoop(OSPRenderer renderer, OSPCamera camera)
+    int OSPExampleViewer::tapestryLoop(OSPRenderer renderer, OSPCamera camera, OSPModel boxModel)
     {
       FILE *input, *info, *error, *output;
       OSPFrameBuffer frameBuffer;
-      OSPModel boxModel;
       OSPLight light_values[2];
       OSPData lights;
       OSPGeometry posy, negx, posz, posx, negy, negz;
@@ -79,6 +224,8 @@ namespace ospray {
       posx = makePosXGeometry(1.0, 1.0, 1.0);
       negy = makeNegYGeometry(1.0, 1.0, 1.0);
       negz = makeNegZGeometry(1.0, 1.0, 1.0);
+
+      **/
       
       fprintf(info, "Creating Preloaded Materials\n");
       materials1 = makePreloadedMaterials();
@@ -88,7 +235,7 @@ namespace ospray {
       }
       materials2 = makePreloadedMaterials();
       materials3 = makePreloadedMaterials();
-      
+
       fprintf(info, "Creating Preloaded Geometries\n");
       geometries1 = makePreloadedGeometries(&models1);
       if (geometries1 == NULL) {
@@ -97,6 +244,8 @@ namespace ospray {
       }
       geometries2 = makePreloadedGeometries(&models2);
       geometries3 = makePreloadedGeometries(&models3);
+      
+      /**
       
       fprintf(info, "Creating Box Model\n");
       boxModel = ospNewModel();
@@ -164,7 +313,7 @@ namespace ospray {
       for (;;) {
         OSPModel model;
         OSPGeometry boxTrans;
-        affine3f boxTransform;
+        osp::affine3f boxTransform;
         OSPModel obj1Model, obj2Model, obj3Model;
         OSPGeometry obj1Trans, obj2Trans, obj3Trans;
         OSPGeometry obj1Geometry, obj2Geometry, obj3Geometry;
@@ -271,15 +420,16 @@ namespace ospray {
         
         fprintf(info, "Got request\n");
     
-        /**
         
-        boxTransform.l.vx = (vec3f){ 1, 0, 0 };
-        boxTransform.l.vy = (vec3f){ 0, 1, 0 };
-        boxTransform.l.vz = (vec3f){ 0, 0, 1 };
-        boxTransform.p = (vec3f){ 0, 0, 0 };
+        boxTransform.l.vx = (osp::vec3f){ 1, 0, 0 };
+        boxTransform.l.vy = (osp::vec3f){ 0, 1, 0 };
+        boxTransform.l.vz = (osp::vec3f){ 0, 0, 1 };
+        boxTransform.p = (osp::vec3f){ 0, 0, 0 };
         
-        boxTrans = ospNewInstance(boxModel, &boxTransform);
+        boxTrans = ospNewInstance(boxModel, boxTransform);
         ospCommit(boxTrans);
+        
+	/**
         
         obj1Transform.l.vx = (vec3f){ bsx1,    0,    0 };
         obj1Transform.l.vy = (vec3f){    0, bsy1,    0 };
@@ -350,11 +500,15 @@ namespace ospray {
         
         ospSetMaterial(posz, poszMaterial);
         ospCommit(posz);
+
+	**/
         
         model = ospNewModel();
+	/**
         ospAddGeometry(model, obj1Trans);
         ospAddGeometry(model, obj2Trans);
         ospAddGeometry(model, obj3Trans);
+	**/
         ospAddGeometry(model, boxTrans);
         ospCommit(model);
         
@@ -363,6 +517,7 @@ namespace ospray {
         
         ospRelease(model);
         ospRelease(boxTrans);
+	/**
         ospRelease(obj1Trans);
         ospRelease(obj2Trans);
         ospRelease(obj3Trans);
@@ -415,11 +570,13 @@ namespace ospray {
     {
       sg::Node &sgCamera = root->child("camera");
       sg::Node &sgRenderer = root->child("renderer");
+      sg::Node &sgModel = sgRenderer.child("world");
 
       OSPCamera camera = sgCamera.valueAs<OSPCamera>();
       OSPRenderer renderer = sgCamera.valueAs<OSPRenderer>();
+      OSPModel model = sgModel.valueAs<OSPModel>();
 
-      tapestryLoop(renderer, camera);
+      tapestryLoop(renderer, camera, model);
 
       /**
 
