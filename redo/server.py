@@ -159,7 +159,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		if type == 'scene':
 			for k in it:
 				if k == 'obj1':
-					objid1 = _g_objs.lookup(next(it))
+					objid1 = str(next(it)).encode("utf8")
 					bx1 = float(next(it))
 					by1 = float(next(it))
 					bz1 = float(next(it))
@@ -168,7 +168,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsz1 = float(next(it))
 					matid1 = _g_materials.lookup(next(it))
 				elif k == 'obj2':
-					objid2 = _g_objs.lookup(next(it))
+					objid2 = str(next(it)).encode("utf8")
 					bx2 = float(next(it))
 					by2 = float(next(it))
 					bz2 = float(next(it))
@@ -177,7 +177,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsz2 = float(next(it))
 					matid2 = _g_materials.lookup(next(it))
 				elif k == 'obj3':
-					objid3 = _g_objs.lookup(next(it))
+					objid3 = str(next(it)).encode("utf8")
 					bx3 = float(next(it))
 					by3 = float(next(it))
 					bz3 = float(next(it))
@@ -238,9 +238,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		
 		query = (
 			b'%f %f %f %f %f %f %f %f %f %d '
-			b'%f %f %f %f %f %f %d %d '
-			b'%f %f %f %f %f %f %d %d '
-			b'%f %f %f %f %f %f %d %d '
+			b'%f %f %f %f %f %f %d %s '
+			b'%f %f %f %f %f %f %d %s '
+			b'%f %f %f %f %f %f %d %s '
 			b'%f %f %f '
 			b'%f %f %f '
 			b'%f %f %f '
