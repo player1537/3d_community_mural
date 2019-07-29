@@ -269,11 +269,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		if b'error' in data:
 			print(data)
 		
-		image = Image.frombytes('RGBX', (quality, quality), data, 'raw', 'RGBX', 0, -1)
-		buffer = BytesIO()
-		image.save(buffer, 'JPEG')
+		#image = Image.frombytes('RGBX', (quality, quality), data, 'raw', 'RGBX', 0, -1)
+		#buffer = BytesIO()
+		#image.save(buffer, 'JPEG')
 		
-		content = buffer.getvalue()
+		#content = buffer.getvalue()
+		content = data
 
 		self.send('image/jpeg', content)
 	
