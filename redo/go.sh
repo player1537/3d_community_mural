@@ -88,7 +88,7 @@ server() {
 		${port:+--port=$port} \
 		--materials materials.txt \
 		--objs objs.txt \
-		/opt/app/server \
+		./scene.sh \
 		"$@"
 }
 
