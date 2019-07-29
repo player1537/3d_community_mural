@@ -1,43 +1,51 @@
 FROM ubuntu:bionic AS base
 
-ARG ospray_version=1.8.5
-
-RUN apt-get update && apt-get install -y \
-        python3.7 \
+RUN apt-get update && \
+    apt-get install -y \
+	build-essential \
+	cmake \
+	libopenmpi-dev \
+	libopenimageio-dev \
+	pkg-config \
+	make \
+	cmake \
+	build-essential \
+	libz-dev \
+	libtbb-dev \
+	libglu1-mesa-dev \
+	freeglut3-dev \
+	libnetcdf-c++4-dev \
+	xorg-dev \
+        x11-apps \
+	xauth \
+	x11-xserver-utils \
+	vim \
+	libjpeg-dev \
+	imagemagick \
+	python3.7 \
         python3-pip \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY ospray-${ospray_version}.x86_64.linux.tar.gz /tmp/
-RUN tar xvf /tmp/ospray-${ospray_version}.x86_64.linux.tar.gz --strip-components=1 -C /usr/
+    && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN python3.7 -m pip install \
-        Pillow \
-        pywavefront
+    Pillow \
+    pywavefront
 
-WORKDIR /opt/app
+WORKDIR /opt
+ARG ispc_version=1.10.0
+ADD ispc-v${ispc_version}-linux.tar.gz /opt/
 
-COPY server.c ./
-RUN make server \
-        CFLAGS='-pedantic -Wall -Werror' \
-        LDLIBS='-lospray'
+WORKDIR /opt
+ARG embree_version=3.5.2
+ADD embree-${embree_version}.x86_64.linux.tar.gz /opt/
 
-ENTRYPOINT []
-CMD []
+WORKDIR /opt
+ARG ospray_version=1.8.5
+ADD ospray-${ospray_version}.tar.gz /opt/
 
+WORKDIR /opt/ospray-${ospray_version}/build
+RUN cmake ..
+RUN make -j$(nproc)
 
-FROM base AS dev
-
-ENTRYPOINT []
-CMD []
-
-
-FROM base AS dist
-
-WORKDIR /opt/app
-COPY server.py ./
-COPY static ./static
-COPY gen ./gen
-COPY materials.txt objs.txt ./
-
-ENTRYPOINT ["python3.7", "-u", "server.py", "--port=8801", "/opt/app/server", "--materials", "materials.txt", "--objs", "objs.txt"]
-CMD []
+COPY ospExampleViewer.cpp /opt/ospray-${ospray_version}/apps/exampleViewer/ospExampleViewer.cpp
+RUN make -j$(nproc)

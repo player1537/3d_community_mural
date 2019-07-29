@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-tag=mural:$USER
-name=mural_$USER
-target=dev
-data=
+tag=mural_redo:$USER
+name=mural_redo_$USER
+target=
+data=/mnt/seenas2/data/intelScenes/Scenes
 registry=
 xauth=
 entrypoint=
@@ -14,7 +14,7 @@ cwd=1
 interactive=1
 script=
 port=8801
-network=mural_$USER
+network=mural_redo_$USER
 
 if [ -f env.sh ]; then
 	. env.sh
@@ -88,7 +88,7 @@ server() {
 		${port:+--port=$port} \
 		--materials materials.txt \
 		--objs objs.txt \
-		/opt/app/server \
+		./scene.sh \
 		"$@"
 }
 
