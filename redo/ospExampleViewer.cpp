@@ -77,6 +77,7 @@ namespace ospray {
 
       // Retrieve the Renderer's Children
       auto &renderer = root->child("renderer");
+      auto &lights = renderer.child("lights");
       auto &world    = renderer.child("world");
       // Skip the World's Nodes that are not active actors in the scene
       std::vector<std::string> nodesToSkip{
@@ -317,11 +318,11 @@ namespace ospray {
         camera["aspect"] = 1.0f;
         camera.commit();
 
-	sg::Node &light = world.createChild("mylight", "PointLight");
-	light["color"] = vec3f(0.8, 0.1, 0.1);
-	light["position"] = vec3f(1.4, 1.4, 1.4);
-	light["intensity"] = 100.0f;
-	light["radius"] = 1.0f;
+	sg::Node &light = lights.createChild("mylight", "PointLight");
+	light["color"] = vec3f(lightr, lightg, lightb);
+	light["position"] = vec3f(lightx, lighty, lightz);
+	light["intensity"] = lightint;
+	light["radius"] = 0.1f;
 
         // Render a single Frame
         std::shared_ptr<sg::FrameBuffer> fb =
