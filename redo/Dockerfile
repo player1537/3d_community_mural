@@ -27,6 +27,10 @@ RUN apt-get update && \
     && \
     rm -rf /var/lib/apt/lists/*
 
+RUN python3.7 -m pip install \
+    Pillow \
+    pywavefront
+
 WORKDIR /opt
 ARG ispc_version=1.10.0
 ADD ispc-v${ispc_version}-linux.tar.gz /opt/
