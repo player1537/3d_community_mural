@@ -23,4 +23,4 @@ for i in $(ls $city);do
 done
 
 useables="$absuseables $natuseables $cituseables"
-exec /opt/ospray-1.8.5/build/ospExampleViewer $useables pt
+exec /opt/ospray-1.8.5/build/ospExampleViewer $useables -r pt
