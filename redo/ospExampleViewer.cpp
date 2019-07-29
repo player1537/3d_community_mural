@@ -291,6 +291,7 @@ namespace ospray {
         // This is the Node linked to the specified object name.
         auto& specObjectOne = objByName->second;
         specObjectOne->child("position").setValue(vec3f(objOnePosX, objOnePosY, objOnePosZ));
+        specObjectOne->child("scale").setValue(vec3f(objOneSklX, objOneSklY, objOneSklZ));
 
         objByName = namedActors.find(objTwoName);
         if (objByName == namedActors.end()) {
@@ -300,6 +301,7 @@ namespace ospray {
         }
         auto& specObjectTwo = objByName->second;
         specObjectTwo->child("position").setValue(vec3f(objTwoPosX, objTwoPosY, objTwoPosZ));
+        specObjectTwo->child("scale").setValue(vec3f(objTwoSklX, objTwoSklY, objTwoSklZ));
 
         objByName = namedActors.find(objThreeName);
         if (objByName == namedActors.end()) {
@@ -309,6 +311,7 @@ namespace ospray {
         }
         auto& specObjectThree = objByName->second;
         specObjectThree->child("position").setValue(vec3f(objThreePosX, objThreePosY, objThreePosZ));
+        specObjectThree->child("scale").setValue(vec3f(objThreeSklX, objThreeSklY, objThreeSklZ));
 
         camera["pos"]    = vec3f(camPosX, camPosY, camPosZ);
         camera["up"]     = vec3f(camUpX, camUpY, camUpZ);
@@ -363,6 +366,10 @@ namespace ospray {
         specObjectOne->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
         specObjectTwo->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
         specObjectThree->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
+
+        specObjectOne->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
+        specObjectTwo->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
+        specObjectThree->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
 
       }
       fclose(output);
