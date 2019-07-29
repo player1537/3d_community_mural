@@ -221,61 +221,9 @@ outside of it (e.g. X=3.5) will not work as expected.
 Creating OBJ Models
 -------------------
 
-OSPRay natively supports triangle meshes. However, parsing OBJ files in
-C isn't the most straightforward thing, and it adds to the processing
-time. Instead, it is easier to make use of a preprocessing step to
-convert the OBJ file into a raw binary file.
-
-The mechanism to do this is in the obj_to_bin.py script, which uses
-PyWavefront to parse the OBJ and MTL files.
-
-The binary format is unique but simple:
-
-  <header> := <u8 has_vertex> <u8 has_index> <u8 has_extra1> <u8 has_extra2>
-  <vertex> := <i32 nvertex> { <f32 x> <f32 y> <f32 z> } ... (nvertex times)
-  <index> := <i32 nindex> { <i32 i> <i32 j> <i32 k> } ... (nindex times)
-  <extra1> := (unused)
-  <extra2> := (unused)
-  <data> := <header> \
-            ( <vertex> if has_vertex ) \
-            ( <index> if has_index ) \
-            ( <extra1> if has_extra1 ) \
-            ( <extra2> if has_extra2 )
-
-has_vertex is either 'V' or '<spc>'. has_index is either 'I' or
-'<spc>'. has_extra1 and has_extra2 aren't defined yet, so they are
-currently both '<spc>'.
-
-A Makefile exists to help convert the models more easily. To run it,
-make sure all the models (and their MTL files) are in the models/
-directory, then just run make to convert them all.
-
-  $ tree models/
-  models/
-  ├── Donut2.mtl
-  ├── Donut2.obj
-  ├── Platonic2.mtl
-  └── Platonic2.obj
-  
-  0 directories, 4 files
-  $ make
-  ./go.sh python obj_to_bin.py --output gen/Platonic2.bin models/Platonic2.obj
-  ./go.sh python obj_to_bin.py --output gen/Donut2.bin models/Donut2.obj --rescale
-  $ tree gen
-  gen
-  ├── Donut2.bin
-  └── Platonic2.bin
-  
-  0 directories, 2 files
-
-Inside the Makefile, you can specify if you want the model
-rescaled. This will make it fit within a -1 to 1 sized box (keeping
-aspect ratio). To enable it for a model (like Donut2), you would add
-a line to the Makefile like:
-
-  gen/Donut2.bin: rescale := --rescale
-
-And the next time you build Donut2.bin, it will be rescaled correctly.
+Note: We currently do not use this conversion process. It could be
+added back, but now that we are using OSPApp as the backend for our
+OSPRay process, we get OBJ parsing for free.
 
 
 Materials
@@ -330,37 +278,42 @@ Models
 There is a list of preloaded OBJ models. They are referenced by name
 with internal spaces removed. The current list of models is:
 
-  Donut     Platonic
+  Angel                  Flower                 Home_08
+  Arm                    Hat                    Home_09
+  Banana                 HighRise_01            Horse
+  BlueWhale              HighRise_02            Hospital_02
+  Building_01            HighRise_03            Hospital
+  Building_02            Home_010               Island
+  Building_03            Home_011               PoloPants
+  Cactus                 Home_01                Restaurant_01
+  Church                 Home_02                Shop_1
+  Crystal                Home_03                Stadium
+  Debris                 Home_04                Umbrella
+  Deer                   Home_05_v2             midSizeBuildingComplex
+  DinoSkull              Home_06                wooden_door
+  EnergyPlant            Home_07
 
-They are passed to OSPRay in almost exactly the same way as
-materials. Like materials, there's a variable to say how many models
-to load, and a variable for each model that specifies the path to
-load from.
+Note: Currently the objs.txt file is not used for the list of preloaded
+OBJ files. Instead, the scene.sh script exists to preload all of the
+objects via the command line. This also means that converting OBJ
+files to binary files is not needed.
 
-  nobj: Number of objects to load (e.g. 12).
-  obj_0: First object.
-  obj_1: Second object.
-  ...
-  obj_11: Last object.
+From the technical side what happens is: when an object is created from
+the command line, it gets added to OSPRay's scene with a name like:
 
-Each of the obj_ variables is a pair of name and path, separated by
-spaces. For example, Donut's value is:
+  translate_Actual_Object_Name_0_0_0
 
-  Donut gen/Donut2.bin
-
-These fields are:
-
-  Name, Path
-
-These environment variables are loaded from an objs.txt file in the
-root of the project. You can add your own model by appending lines
-to objs.txt. For example:
-
-  Platonic  gen/Platonic2.bin
+Tapestry loops through all objects in the scene and extracts
+the Actual_Object_Name from the name OSPRay gives it. This
+Actual_Object_Name acts as the identifier for obj1, obj2, etc controls.
 
 
 Walls
 -----
+
+Note: This currently does not work due to how we are loading the
+scene. To make this happen again, we would need to add a special OBJ
+file for each wall and set the material for each one.
 
 You can change the color of each wall to any RGB color. Each wall
 is labeled as {Neg,Pos}{X,Y,Z}. In the scene URL, you would give a
@@ -378,6 +331,8 @@ Lights
 
 There is currently only one controllable light source, a point
 light. Its position, color, and intensity can be changed.
+
+Note: It does not allow changing the radius yet.
 
 
 Fewer than 3 Objects
@@ -407,11 +362,15 @@ const obj1 = Object.assign({}, baseObject, {
 Miscellaneous Notes
 -------------------
 
-In the OSPRay code, it would be nice to be able create an instance with a different material than the instanced geometry. However, based on Instance.ispc in the OSPRay library, it only uses the instanced geometry's material.
+In the OSPRay code, it would be nice to be able create an instance
+with a different material than the instanced geometry. However, based
+on Instance.ispc in the OSPRay library, it only uses the instanced
+geometry's material.
 
   https://github.com/ospray/ospray/blob/43a89186b4dc8a17dc130e3295ad96ddf69cb029/ospray/geometry/Instance.ispc#L41-L43
 
-OSPRay never explicitly defines what an affine3f is. You can find a struct definition in the ospray.h header file, but all you get is:
+OSPRay never explicitly defines what an affine3f is. You can find a
+struct definition in the ospray.h header file, but all you get is:
 
   typedef struct { osp_vec3f vx, vy, vz; }                    osp_linear3f;
   typedef struct { osp_linear3f l; osp_vec3f p; }             osp_affine3f;
@@ -428,7 +387,10 @@ To get the real definition, you have to look at Instance.h:
 
 (Side note: I think "trianglemesh" above should be "instance").
 
-A question I had is: why not just store the whole matrix? For affine transformations, you generally don't (never?) change the last row and leave it as 0, 0, 0, 1. In other words, for most use cases, your matrix will look like:
+A question I had is: why not just store the whole matrix? For affine
+transformations, you generally don't (never?) change the last row
+and leave it as 0, 0, 0, 1. In other words, for most use cases,
+your matrix will look like:
 
        l.vx    l.vy    l.vz      p
   [ [ XSCALE,      0,      0, XTRANS ]
