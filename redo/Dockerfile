@@ -42,3 +42,6 @@ ADD ospray-${ospray_version}.tar.gz /opt/
 WORKDIR /opt/ospray-${ospray_version}/build
 RUN cmake ..
 RUN make -j$(nproc)
+
+COPY ospExampleViewer.cpp /opt/ospray-${ospray_version}/apps/exampleViewer/ospExampleViewer.cpp
+RUN make -j$(nproc)
