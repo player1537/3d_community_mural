@@ -3,7 +3,7 @@
 tag=mural_redo:$USER
 name=mural_redo_$USER
 target=
-data=
+data=/mnt/seenas2/data/intelScenes/Scenes
 registry=
 xauth=
 entrypoint=
