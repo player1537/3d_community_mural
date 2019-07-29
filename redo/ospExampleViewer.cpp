@@ -236,6 +236,12 @@ namespace ospray {
         camera["aspect"] = 1.0f;
         camera.commit();
 
+	sg::Node &light = world.createChild("mylight", "PointLight");
+	light["color"] = vec3f(0.8, 0.1, 0.1);
+	light["position"] = vec3f(1.4, 1.4, 1.4);
+	light["intensity"] = 100.0f;
+	light["radius"] = 1.0f;
+
         // Render a single Frame
         std::shared_ptr<sg::FrameBuffer> fb = std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
         root->setChild("frameBuffer", fb);
