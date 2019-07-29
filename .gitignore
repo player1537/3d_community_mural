@@ -3,6 +3,7 @@
 *.png
 .mk.*
 env.sh
+scene.env.sh
 /models
 /gen
 ospray-*

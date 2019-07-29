@@ -1,25 +1,22 @@
 #!/bin/bash
-scenes="/mnt/seenas2/data/intelScenes/Scenes/"
-abstract="/mnt/seenas2/data/intelScenes/Scenes/Abstract"
-nature="/mnt/seenas2/data/intelScenes/Scenes/Nature"
-city="/mnt/seenas2/data/intelScenes/Scenes/City"
+base=
 
-for i in $(ls $abstract);do
-    if [[ $i == *.obj ]];then
-        absuseables="$absuseables "$abstract/$i""
-    fi
+[ -f scene.env.sh ] && . scene.env.sh
+
+abstract=${base:?}/Abstract
+nature=${base:?}/Nature
+city=${base:?}/City
+
+for i in $abstract/*.obj; do
+    absuseables="$absuseables "$i""
 done
 
-for i in $(ls $nature);do
-    if [[ $i == *.obj ]];then
-        natuseables="$natuseables "$nature/$i""
-    fi
+for i in $nature/*.obj; do
+    natuseables="$natuseables "$i""
 done
 
-for i in $(ls $city);do
-    if [[ $i == *.obj ]];then
-        cituseables="$cituseables "$city/$i""
-    fi
+for i in $city/*.obj; do
+    cituseables="$cituseables "$i""
 done
 
 useables="$absuseables $natuseables $cituseables"

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-tag=mural_redo:$USER
-name=mural_redo_$USER
+tag=mural:$USER
+name=mural_$USER
 target=
-data=/mnt/seenas2/data/intelScenes/Scenes
+data=
 registry=
 xauth=
 entrypoint=
@@ -14,7 +14,7 @@ cwd=1
 interactive=1
 script=
 port=8801
-network=mural_redo_$USER
+network=mural_$USER
 
 if [ -f env.sh ]; then
 	. env.sh
