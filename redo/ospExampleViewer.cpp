@@ -110,24 +110,25 @@ namespace ospray {
         eraseSubStr(actorName, "_0_0_0");
         printf("actor: %s as %s\n", actor.first.c_str(), actorName.c_str());
         namedActors.emplace(std::make_pair(actorName, actor.second));
-        actor.second->child("position").setValue(vec3f(0.0f, 0.0f, 0.0f));
+        actor.second->child("position").setValue(vec3f(-999.0f, -999.0f, -999.0f));
       }
 
       FILE *input, *info, *error, *output;
-      input = fopen("/dev/stdin", "r");
-      info = fopen("/dev/stdout", "w");
-      error = fopen("/dev/stderr", "w");
+      input  = fopen("/dev/stdin", "r");
+      info   = fopen("/dev/stdout", "w");
+      error  = fopen("/dev/stderr", "w");
       output = fopen("/dev/fd/100", "wb");
       while (true) {
-
-        float camPosX, camPosY, camPosZ, camUpX, camUpY, camUpZ, camVuDirX, camVuDirY, camVuDirZ;
+        float camPosX, camPosY, camPosZ, camUpX, camUpY, camUpZ, camVuDirX,
+            camVuDirY, camVuDirZ;
         int quality;
-        float bx1, by1, bz1, bsx1, bsy1, bsz1;
-        int matid1, objid1;
-        float bx2, by2, bz2, bsx2, bsy2, bsz2;
-        int matid2, objid2;
-        float bx3, by3, bz3, bsx3, bsy3, bsz3;
-        int matid3, objid3;
+        float objOnePosX, objOnePosY, objOnePosZ, objOneSklX, objOneSklY, objOneSklZ;
+        int matid1;
+        float objTwoPosX, objTwoPosY, objTwoPosZ, objTwoSklX, objTwoSklY, objTwoSklZ;
+        int matid2;
+        float objThreePosX, objThreePosY, objThreePosZ, objThreeSklX, objThreeSklY, objThreeSklZ;
+        int matid3;
+        char objid1[256], objid2[256], objid3[256];
         float negxr, negxg, negxb;
         float posxr, posxg, posxb;
         float negyr, negyg, negyb;
@@ -139,33 +140,74 @@ namespace ospray {
 
         fprintf(info, "Waiting for request...\n");
 
-        if (fscanf(input, "%f %f %f %f %f %f %f %f %f %d", &camPosX, &camPosY, &camPosZ, &camUpX, &camUpY, &camUpZ, &camVuDirX, &camVuDirY, &camVuDirZ, &quality) != 10) {
+        if (fscanf(input,
+                   "%f %f %f %f %f %f %f %f %f %d",
+                   &camPosX,
+                   &camPosY,
+                   &camPosZ,
+                   &camUpX,
+                   &camUpY,
+                   &camUpZ,
+                   &camVuDirX,
+                   &camVuDirY,
+                   &camVuDirZ,
+                   &quality) != 10) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
         }
 
-        if (fscanf(input, "%f %f %f %f %f %f %d %s", &bx1, &by1, &bz1, &bsx1, &bsy1, &bsz1, &matid1, &objid1) != 8) {
+        if (fscanf(input,
+                   "%f %f %f %f %f %f %d %s",
+                   &objOnePosX,
+                   &objOnePosY,
+                   &objOnePosZ,
+                   &objOneSklX,
+                   &objOneSklY,
+                   &objOneSklZ,
+                   &matid1,
+                   &objid1[0]) != 8) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
         }
+        std::string objOneName = objid1;
 
-        if (fscanf(input, "%f %f %f %f %f %f %d %s", &bx2, &by2, &bz2, &bsx2, &bsy2, &bsz2, &matid2, &objid2) != 8) {
+        if (fscanf(input,
+                   "%f %f %f %f %f %f %d %s",
+                   &objTwoPosX,
+                   &objTwoPosY,
+                   &objTwoPosZ,
+                   &objTwoSklX,
+                   &objTwoSklY,
+                   &objTwoSklZ,
+                   &matid2,
+                   &objid2[0]) != 8) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
         }
+        std::string objTwoName = objid2;
 
-        if (fscanf(input, "%f %f %f %f %f %f %d %s", &bx3, &by3, &bz3, &bsx3, &bsy3, &bsz3, &matid3, &objid3) != 8) {
+        if (fscanf(input,
+                   "%f %f %f %f %f %f %d %s",
+                   &objThreePosX,
+                   &objThreePosY,
+                   &objThreePosZ,
+                   &objThreeSklX,
+                   &objThreeSklY,
+                   &objThreeSklZ,
+                   &matid3,
+                   &objid3[0]) != 8) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
         }
+        std::string objThreeName = objid3;
 
         /// IGNORE VALS FROM HERE
         /**
@@ -219,7 +261,15 @@ namespace ospray {
          *
          */
 
-        if (fscanf(input, "%f %f %f %f %f %f %f", &lightx, &lighty, &lightz, &lightr, &lightg, &lightb, &lightint) != 7) {
+        if (fscanf(input,
+                   "%f %f %f %f %f %f %f",
+                   &lightx,
+                   &lighty,
+                   &lightz,
+                   &lightr,
+                   &lightg,
+                   &lightb,
+                   &lightint) != 7) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
@@ -228,6 +278,37 @@ namespace ospray {
 
         fprintf(info, "Got request\n");
 
+        /**
+         * Here we need to make sure the specified objects are inside
+         * of the mapped actors. If the object is not, then we skip this request.
+         */
+        auto objByName = namedActors.find(objOneName);
+        if (objByName == namedActors.end()) {
+          fprintf(error, "Error: bad format, actor %s not in actor map.\n", objOneName.c_str());
+          fflush(output);
+          continue;
+        }
+        // This is the Node linked to the specified object name.
+        auto& specObjectOne = objByName->second;
+        specObjectOne->child("position").setValue(vec3f(objOnePosX, objOnePosY, objOnePosZ));
+
+        objByName = namedActors.find(objTwoName);
+        if (objByName == namedActors.end()) {
+          fprintf(error, "Error: bad format, actor %s not in actor map.\n", objTwoName.c_str());
+          fflush(output);
+          continue;
+        }
+        auto& specObjectTwo = objByName->second;
+        specObjectTwo->child("position").setValue(vec3f(objTwoPosX, objTwoPosY, objTwoPosZ));
+
+        objByName = namedActors.find(objThreeName);
+        if (objByName == namedActors.end()) {
+          fprintf(error, "Error: bad format, actor %s not in actor map.\n", objThreeName.c_str());
+          fflush(output);
+          continue;
+        }
+        auto& specObjectThree = objByName->second;
+        specObjectThree->child("position").setValue(vec3f(objThreePosX, objThreePosY, objThreePosZ));
 
         camera["pos"]    = vec3f(camPosX, camPosY, camPosZ);
         camera["up"]     = vec3f(camUpX, camUpY, camUpZ);
@@ -237,7 +318,8 @@ namespace ospray {
         camera.commit();
 
         // Render a single Frame
-        std::shared_ptr<sg::FrameBuffer> fb = std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
+        std::shared_ptr<sg::FrameBuffer> fb =
+            std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
         renderer["spp"]                            = 20;
@@ -258,17 +340,30 @@ namespace ospray {
         }
 
         ContextCaptureStruct captureStruct;
-        int ret = stbi_write_jpg_to_func(jpgWriteHelp, (void*)&captureStruct, fbSize.x, fbSize.y, 3, &rgbAsUnsChars[0], 100);
+        int ret = stbi_write_jpg_to_func(jpgWriteHelp,
+                                         (void *)&captureStruct,
+                                         fbSize.x,
+                                         fbSize.y,
+                                         3,
+                                         &rgbAsUnsChars[0],
+                                         100);
         if (!ret) {
           printf("bad\n");
           break;
         }
 
         fprintf(output, "%lu:", captureStruct.bytes.size());
-        fwrite(captureStruct.bytes.data(), 1, captureStruct.bytes.size(), output);
+        fwrite(
+            captureStruct.bytes.data(), 1, captureStruct.bytes.size(), output);
         fprintf(output, ",");
         fflush(output);
         fbCapture->clear();
+
+        // Reset the Spec Objects positions.
+        specObjectOne->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
+        specObjectTwo->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
+        specObjectThree->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
+
       }
       fclose(output);
     }  // namespace app
