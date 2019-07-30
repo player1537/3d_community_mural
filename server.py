@@ -150,9 +150,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		negzr = negzg = negzb = None
 		poszr = poszg = poszb = None
 		
-		lightx = lighty = lightz = None
-		lightr = lightg = lightb = None
-		lightint = None
+		lightx, lighty, lightz = [], [], []
+		lightr, lightg, lightb = [], [], []
+		lightint = []
 		
 		it = iter(what.split(','))
 		type = next(it)
@@ -210,13 +210,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					poszg = float(next(it))
 					poszb = float(next(it))
 				elif k == 'light':
-					lightx = float(next(it))
-					lighty = float(next(it))
-					lightz = float(next(it))
-					lightr = float(next(it))
-					lightg = float(next(it))
-					lightb = float(next(it))
-					lightint = float(next(it))
+					lightx.append(float(next(it)))
+					lighty.append(float(next(it)))
+					lightz.append(float(next(it)))
+					lightr.append(float(next(it)))
+					lightg.append(float(next(it)))
+					lightb.append(float(next(it)))
+					lightint.append(float(next(it)))
 				else:
 					print(f'bad scene type {k!r}')
 					raise NotImplementedError
@@ -247,7 +247,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			b'%f %f %f '
 			b'%f %f %f '
 			b'%f %f %f '
-			b'%f %f %f %f %f %f %f'
+			b'%d %s '
 		) % (
 			x, y, z, ux, uy, uz, vx, vy, vz, quality,
 			bx1, by1, bz1, bsx1, bsy1, bsz1, matid1, objid1,
@@ -259,7 +259,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			posyr, posyg, posyb,
 			negzr, negzg, negzb,
 			poszr, poszg, poszb,
-			lightx, lighty, lightz, lightr, lightg, lightb, lightint,
+			len(lightx),
+			b' '.join(
+				b'%f %f %f %f %f %f %f' % lightparams
+				for lightparams in zip(lightx, lighty, lightz, lightr, lightg, lightb, lightint)
+			),
 		)
 		
 		with _g_subprocess.lock:
