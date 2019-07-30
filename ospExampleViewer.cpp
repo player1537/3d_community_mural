@@ -70,7 +70,7 @@ namespace ospray {
       camera["pos"]    = vec3f(0.0f, 3.5f, 10.2f);
       camera["up"]     = vec3f(0.0f, 1.0f, 0.0f);
       camera["dir"]    = vec3f(0.0f, 0.0f, -1.0f);
-      camera["fovy"]   = 90.0f;
+      camera["fovy"]   = 180.0f;
       camera["aspect"] = 1.0f;
       camera.commit();
 
@@ -425,10 +425,10 @@ namespace ospray {
 
         // Render a single Frame
         std::shared_ptr<sg::FrameBuffer> fb =
-                std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
+                std::make_shared<sg::FrameBuffer>(vec2i(quality, quality));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
-        renderer["spp"]                            = 60;
+        renderer["spp"]                            = 100;
         std::shared_ptr<sg::FrameBuffer> fbCapture = root->renderFrame(true);
         auto fbSize                                = fbCapture->size();
         const void *pixels = fbCapture->map(OSP_FB_COLOR);
