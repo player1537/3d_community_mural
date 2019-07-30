@@ -152,7 +152,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		
 		lightx, lighty, lightz = [], [], []
 		lightr, lightg, lightb = [], [], []
-		lightint = []
+		lightint, lightrad = [], []
 		
 		it = iter(what.split(','))
 		type = next(it)
@@ -217,6 +217,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					lightg.append(float(next(it)))
 					lightb.append(float(next(it)))
 					lightint.append(float(next(it)))
+					lightrad.append(float(next(it)))
 				else:
 					print(f'bad scene type {k!r}')
 					raise NotImplementedError
@@ -261,8 +262,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			poszr, poszg, poszb,
 			len(lightx),
 			b' '.join(
-				b'%f %f %f %f %f %f %f' % lightparams
-				for lightparams in zip(lightx, lighty, lightz, lightr, lightg, lightb, lightint)
+				b'%f %f %f %f %f %f %f %f' % lightparams
+				for lightparams in zip(lightx, lighty, lightz, lightr, lightg, lightb, lightint, lightrad)
 			),
 		)
 		

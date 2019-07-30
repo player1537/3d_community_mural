@@ -184,7 +184,7 @@ namespace ospray {
         float poszr, poszg, poszb;
 	int nlights;
         float lightPosX, lightPosY, lightPosZ;
-        float lightR, lightG, lightB, lightIntense;
+        float lightR, lightG, lightB, lightIntense, lightRadius;
 
         fprintf(info, "Waiting for request...\n");
 
@@ -318,14 +318,15 @@ namespace ospray {
 
 	for (int i=0; i<nlights; ++i) {
           if (fscanf(input,
-                     "%f %f %f %f %f %f %f",
+                     "%f %f %f %f %f %f %f %f",
                      &lightPosX,
                      &lightPosY,
                      &lightPosZ,
                      &lightR,
                      &lightG,
                      &lightB,
-                     &lightIntense) != 7) {
+                     &lightIntense,
+		     &lightRadius) != 8) {
             fprintf(error, "Error: bad format\n");
             fprintf(output, "9:error arg,");
             fflush(output);
@@ -343,7 +344,7 @@ namespace ospray {
           light["color"] = vec3f(lightR, lightG, lightB);
           light["position"] = vec3f(lightPosX, lightPosY, lightPosZ);
           light["intensity"] = lightIntense;
-          light["radius"] = 0.1f;
+          light["radius"] = lightRadius;
 	}
 
 
