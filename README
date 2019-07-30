@@ -225,11 +225,11 @@ This results in:
 
 The scene has a fixed size and has limits on X, Y, and Z. Anything
 (camera or ball) can be put anywhere in this fixed space, but going
-outside of it (e.g. X=3.5) will not work as expected.
+outside of it (e.g. X=100) will not work as expected.
 
-  X: -1 (left) to +1 (right)
-  Y: -1 (bottom) to +1 (top)
-  Z: 0 (camera plane) to +1 (far end of the box)
+  X: -3.45 (left) to +3.45 (right)
+  Y: -3.45 (bottom) to +3.45 (top)
+  Z: -9 (far end of the box) to +1 (far end of the box)
 
 
 Creating OBJ Models
