@@ -30,4 +30,5 @@ for i in $spheres/*.obj; do
 done
 
 useables="$absuseables $natuseables $cituseables $chromeusables $sphereusables"
-exec /opt/ospray-1.8.5/build/ospExampleViewer $useables -r pt
+lights=""
+exec /opt/ospray-1.8.5/build/ospExampleViewer $lights $useables -r pt

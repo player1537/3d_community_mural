@@ -22,6 +22,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "sg/3rdParty/stb_image_write.h"
 
+#ifdef OSPRAY_APPS_ENABLE_DENOISER
+#include <OpenImageDenoise/oidn.hpp>
+#endif
+
 #include "stdlib.h"
 
 void eraseSubStr(std::string &mainStr, const std::string &toErase)
@@ -55,6 +59,11 @@ namespace ospray {
       myfoo->write(data, size);
     }
 
+    inline float linear_to_srgb(const float f) {
+      const float c = std::max(f, 0.f);
+      return c <= 0.0031308f ? 12.92f*c : std::pow(c, 1.f/2.4f)*1.055f - 0.055f;
+    }
+
     class OSPExampleViewer : public OSPApp
     {
       void render(const std::shared_ptr<sg::Frame> &) override;
@@ -65,13 +74,22 @@ namespace ospray {
 
     void OSPExampleViewer::render(const std::shared_ptr<sg::Frame> &root)
     {
+#ifdef OSPRAY_APPS_ENABLE_DENOISER
+      oidn::DeviceRef dev = oidn::newDevice();
+      dev.commit();
+      oidn::FilterRef filter = dev.newFilter("RT");
+      std::vector<vec4f> oidnOutput;
+#endif
+
       // Establish the Camera
       auto &camera     = root->child("camera");
       camera["pos"]    = vec3f(0.0f, 3.5f, 10.2f);
       camera["up"]     = vec3f(0.0f, 1.0f, 0.0f);
       camera["dir"]    = vec3f(0.0f, 0.0f, -1.0f);
-      camera["fovy"]   = 180.0f;
+      camera["fovy"]   = 50.0f;
       camera["aspect"] = 1.0f;
+      camera["apertureRadius"] = 0.1f;
+      camera["focusDistance"] = 12.0f;
       camera.commit();
 
       for (auto &element : root->children()) {
@@ -79,10 +97,10 @@ namespace ospray {
       }
       // Retrieve the Renderer's Children
       auto &renderer = root->child("renderer");
-      renderer.child("maxDepth").setValue(50);
-      renderer.child("minContribution").setValue(0.01f);
-      renderer.createChild("rouletteDepth", "int");
-      renderer.child("rouletteDepth").setValue(15);
+      renderer.child("maxDepth").setValue(5);
+      renderer.child("minContribution").setValue(0.0001f);
+      //renderer.createChild("rouletteDepth", "int");
+      //renderer.child("rouletteDepth").setValue(15);
       auto &world    = renderer.child("world");
       auto &lights   = renderer.child("lights");
 
@@ -419,7 +437,7 @@ namespace ospray {
         camera["pos"]    = vec3f(camPosX, camPosY, camPosZ);
         camera["up"]     = vec3f(camUpX, camUpY, camUpZ);
         camera["dir"]    = vec3f(camVuDirX, camVuDirY, camVuDirZ);
-        camera["fovy"]   = 90.0f;
+        camera["fovy"]   = 50.0f;
         camera["aspect"] = 1.0f;
         camera.commit();
 
@@ -428,16 +446,120 @@ namespace ospray {
                 std::make_shared<sg::FrameBuffer>(vec2i(quality, quality));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
-        renderer["spp"]                            = 100;
+        renderer["spp"]                            = 5;
         std::shared_ptr<sg::FrameBuffer> fbCapture = root->renderFrame(true);
         auto fbSize                                = fbCapture->size();
-        const void *pixels = fbCapture->map(OSP_FB_COLOR);
+	int w = fbSize.x;
+	int h = fbSize.y;
+
+#ifdef OSPRAY_APPS_ENABLE_DENOISER
+        bool hdr = !fb->toneMapped();
+        filter.set("hdr", hdr);
+
+        {
+          const char *name = "color";
+          void *ptr = (void *)fbCapture->map(OSP_FB_COLOR);
+          oidn::Format format = oidn::Format::Float3;
+          size_t width = w;
+          size_t height = h;
+          size_t byteOffset = 0;
+          size_t bytePixelStride = sizeof(vec4f);
+          size_t byteRowStride = w * bytePixelStride;
+          filter.setImage(name, ptr, format, width, height, byteOffset, bytePixelStride, byteRowStride);
+          fbCapture->unmap(ptr);
+        }
+
+        {
+          const char *name = "normal";
+          void *ptr = (void *)fbCapture->map(OSP_FB_NORMAL);
+          oidn::Format format = oidn::Format::Float3;
+          size_t width = w;
+          size_t height = h;
+          size_t byteOffset = 0;
+          size_t bytePixelStride = sizeof(vec3f);
+          size_t byteRowStride = w * bytePixelStride;
+          filter.setImage(name, ptr, format, width, height, byteOffset, bytePixelStride, byteRowStride);
+          fbCapture->unmap(ptr);
+        }
+
+        {
+          const char *name = "albedo";
+          void *ptr = (void *)fbCapture->map(OSP_FB_ALBEDO);
+          oidn::Format format = oidn::Format::Float3;
+          size_t width = w;
+          size_t height = h;
+          size_t byteOffset = 0;
+          size_t bytePixelStride = sizeof(vec3f);
+          size_t byteRowStride = w * bytePixelStride;
+          filter.setImage(name, ptr, format, width, height, byteOffset, bytePixelStride, byteRowStride);
+          fbCapture->unmap(ptr);
+        }
+
+        {
+          const char *name = "output";
+          oidnOutput.resize(w * h);
+          void *ptr = oidnOutput.data();
+          oidn::Format format = oidn::Format::Float3;
+          size_t width = w;
+          size_t height = h;
+          size_t byteOffset = 0;
+          size_t bytePixelStride = sizeof(vec4f);
+          size_t byteRowStride = w * bytePixelStride;
+          filter.setImage(name, ptr, format, width, height, byteOffset, bytePixelStride, byteRowStride);
+        }
+
+        filter.commit();
+        filter.execute();
+        float *pixels = (float *)oidnOutput.data();
+        //float *pixels = (float *)foo->map();
+//        float *pixels = (float *)malloc(4 * w * h * sizeof(float));
+//        {
+//          const void *ptr = foo->map(OSP_FB_NORMAL);
+//          const float *input = (float *)ptr;
+//          for (int i=0; i<h; ++i)
+//          for (int j=0; j<w; ++j) {
+//            pixels[4*j+4*w*i+0] = input[3*j+3*w*i+0];
+//            pixels[4*j+4*w*i+1] = input[3*j+3*w*i+1];
+//            pixels[4*j+4*w*i+2] = input[3*j+3*w*i+2];
+//            pixels[4*j+4*w*i+3] = 255.0f;
+//          }
+//          foo->unmap(ptr);
+//        }
+#else
+        float *pixels = (float *)fbCapture->map();
+#endif
+
+        unsigned char *buffer = (unsigned char *)malloc(4 * w * h);
+
+        // XXX: use a constant normalization factor since each process only sees
+        // a single tile, not the whole image.  Normalization has to be
+        // consistent across all tiles.
+        float normalize = 1.f/2.3f; // 2.3 seems a decent value with filmic tonemapping
+        for (int j=0; j<h; ++j) {
+          float *rowIn = (float *)&pixels[4*(h-1-j)*w];
+          for (int i=0; i<w; ++i) {
+            int index = j * w + i;
+            buffer[4*index+0] = (unsigned char)(255.0f * linear_to_srgb(rowIn[4*i+0] * normalize));
+            buffer[4*index+1] = (unsigned char)(255.0f * linear_to_srgb(rowIn[4*i+1] * normalize));
+            buffer[4*index+2] = (unsigned char)(255.0f * linear_to_srgb(rowIn[4*i+2] * normalize));
+            buffer[4*index+3] = 255;
+          }
+        }
+
+#ifdef OSPRAY_APPS_ENABLE_DENOISER
+#else
+        fbCapture->unmap(pixels);
+#endif
+
         size_t pixelsSize = (size_t)fbSize.x * (size_t)fbSize.y * (size_t)4;
 
         fprintf(output, "%lu:", pixelsSize * sizeof(uint8_t));
-        fwrite(pixels, sizeof(uint8_t), pixelsSize, output);
+        fwrite(buffer, sizeof(uint8_t), pixelsSize, output);
         fprintf(output, ",");
         fflush(output);
+
+	free(buffer);
+
         fbCapture->clear();
 
         // Reset the Spec Objects positions, scales and rots.

@@ -40,12 +40,17 @@ ARG embree_version=3.5.2
 ADD embree-${embree_version}.x86_64.linux.tar.gz /opt/
 
 WORKDIR /opt
+ARG oidn_version=0.8.2
+ADD oidn-${oidn_version}.x86_64.linux.tar.gz /opt/
+
+WORKDIR /opt
 ARG ospray_version=1.8.5
 ADD ospray-${ospray_version}.tar.gz /opt/
 
 WORKDIR /opt/ospray-${ospray_version}/build
-RUN cmake ..
-RUN make -j$(nproc)
-
 COPY ospExampleViewer.cpp /opt/ospray-${ospray_version}/apps/exampleViewer/ospExampleViewer.cpp
+RUN cmake .. \
+        -DOSPRAY_APPS_ENABLE_DENOISER=1 \
+	-DOpenImageDenoise_DIR=/opt/oidn-${oidn_version}.x86_64.linux/lib/cmake/OpenImageDenoise/
+
 RUN make -j$(nproc)

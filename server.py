@@ -288,7 +288,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		if b'error' in data:
 			print(data)
 
-		image = Image.frombytes('RGBA', (quality, quality), data, 'raw', 'RGBA', 0, -1)
+		image = Image.frombytes('RGBA', (quality, quality), data, 'raw', 'RGBA', 0, 1)
 		canvas = Image.new('RGBA', image.size, bgcolor)
 		canvas.paste(image, mask=image)
 		buffer = BytesIO()
