@@ -1,11 +1,13 @@
 #!/bin/bash
-base=
+base=/mnt/seenas2/data/intelScenes/Scenes
 
 [ -f scene.env.sh ] && . scene.env.sh
 
 abstract=${base:?}/Abstract
 nature=${base:?}/Nature
 city=${base:?}/City
+chromeroom=${base:?}/Chrome_Room
+spheres=${base:?}/Spheres
 
 for i in $abstract/*.obj; do
     absuseables="$absuseables "$i""
@@ -19,5 +21,13 @@ for i in $city/*.obj; do
     cituseables="$cituseables "$i""
 done
 
-useables="$absuseables $natuseables $cituseables"
+for i in $chromeroom/*.obj; do
+    chromeusables="$chromeusables "$i""
+done
+
+for i in $spheres/*.obj; do
+    sphereusables="$sphereusables "$i""
+done
+
+useables="$absuseables $natuseables $cituseables $chromeusables $sphereusables"
 exec /opt/ospray-1.8.5/build/ospExampleViewer $useables -r pt

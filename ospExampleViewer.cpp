@@ -153,6 +153,9 @@ namespace ospray {
         namedActors.emplace(std::make_pair(actorName, actor.second));
         actor.second->child("position")
             .setValue(vec3f(-999.0f, -999.0f, -999.0f));
+        if (actorName == "GoldRoom"){
+          actor.second->child("position").setValue(vec3f(0.0f, 0.0f, 0.0f));
+        }
       }
 
       FILE *input, *info, *error, *output;
