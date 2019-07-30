@@ -18,6 +18,7 @@
 #include "sg/geometry/TriangleMesh.h"
 
 #include "ospapp/OSPApp.h"
+#include "widgets/imguiViewer.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "sg/3rdParty/stb_image_write.h"
@@ -74,10 +75,50 @@ namespace ospray {
       camera["aspect"] = 1.0f;
       camera.commit();
 
+      for (auto &element : root->children()) {
+        printf("ROOT CHILD: %s\n", element.first.c_str());
+      }
       // Retrieve the Renderer's Children
       auto &renderer = root->child("renderer");
-      auto &lights = renderer.child("lights");
       auto &world    = renderer.child("world");
+      auto &lights   = renderer.child("lights");
+
+      sg::Node &lightOne = lights.createChild("lightOne", "PointLight");
+      lightOne["color"] = vec3f(1.0f, 1.0f, 1.0f);
+      lightOne["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+      lightOne["intensity"] = 0.4f;
+      lightOne["radius"] = 0.1f;
+
+      sg::Node &lightTwo = lights.createChild("lightTwo", "PointLight");
+      lightTwo["color"] = vec3f(1.0f, 1.0f, 1.0f);
+      lightTwo["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+      lightTwo["intensity"] = 0.4f;
+      lightTwo["radius"] = 0.1f;
+
+      sg::Node &lightThree = lights.createChild("lightThree", "PointLight");
+      lightThree["color"] = vec3f(1.0f, 1.0f, 1.0f);
+      lightThree["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+      lightThree["intensity"] = 0.4f;
+      lightThree["radius"] = 0.1f;
+
+      sg::Node &lightFour = lights.createChild("lightFour", "PointLight");
+      lightFour["color"] = vec3f(1.0f, 1.0f, 1.0f);
+      lightFour["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+      lightFour["intensity"] = 0.4f;
+      lightFour["radius"] = 0.1f;
+
+      sg::Node &lightFive = lights.createChild("lightFive", "PointLight");
+      lightFive["color"] = vec3f(1.0f, 1.0f, 1.0f);
+      lightFive["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+      lightFive["intensity"] = 0.4f;
+      lightFive["radius"] = 0.1f;
+
+      sg::Node &lightSix = lights.createChild("lightSix", "PointLight");
+      lightSix["color"] = vec3f(1.0f, 1.0f, 1.0f);
+      lightSix["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+      lightSix["intensity"] = 0.4f;
+      lightSix["radius"] = 0.1f;
+
       // Skip the World's Nodes that are not active actors in the scene
       std::vector<std::string> nodesToSkip{
           "bounds", "compactMode", "dynamicScene", "robustMode"};
@@ -110,7 +151,11 @@ namespace ospray {
         eraseSubStr(actorName, "_0_0_0");
         printf("actor: %s as %s\n", actor.first.c_str(), actorName.c_str());
         namedActors.emplace(std::make_pair(actorName, actor.second));
-        actor.second->child("position").setValue(vec3f(-999.0f, -999.0f, -999.0f));
+        actor.second->child("position")
+            .setValue(vec3f(-999.0f, -999.0f, -999.0f));
+        if (actorName == "GoldRoom"){
+          actor.second->child("position").setValue(vec3f(0.0f, 0.0f, 0.0f));
+        }
       }
 
       FILE *input, *info, *error, *output;
@@ -122,11 +167,14 @@ namespace ospray {
         float camPosX, camPosY, camPosZ, camUpX, camUpY, camUpZ, camVuDirX,
             camVuDirY, camVuDirZ;
         int quality;
-        float objOnePosX, objOnePosY, objOnePosZ, objOneSklX, objOneSklY, objOneSklZ;
+        float objOnePosX, objOnePosY, objOnePosZ, objOneSklX, objOneSklY,
+            objOneSklZ;
         int matid1;
-        float objTwoPosX, objTwoPosY, objTwoPosZ, objTwoSklX, objTwoSklY, objTwoSklZ;
+        float objTwoPosX, objTwoPosY, objTwoPosZ, objTwoSklX, objTwoSklY,
+            objTwoSklZ;
         int matid2;
-        float objThreePosX, objThreePosY, objThreePosZ, objThreeSklX, objThreeSklY, objThreeSklZ;
+        float objThreePosX, objThreePosY, objThreePosZ, objThreeSklX,
+            objThreeSklY, objThreeSklZ;
         int matid3;
         char objid1[256], objid2[256], objid3[256];
         float negxr, negxg, negxb;
@@ -135,8 +183,8 @@ namespace ospray {
         float posyr, posyg, posyb;
         float negzr, negzg, negzb;
         float poszr, poszg, poszb;
-        float lightx, lighty, lightz;
-        float lightr, lightg, lightb, lightint;
+        float lightOnePosX, lightOnePosY, lightOnePosZ;
+        float lightOneR, lightOneG, lightOneB, lightOneIntense;
 
         fprintf(info, "Waiting for request...\n");
 
@@ -263,55 +311,73 @@ namespace ospray {
 
         if (fscanf(input,
                    "%f %f %f %f %f %f %f",
-                   &lightx,
-                   &lighty,
-                   &lightz,
-                   &lightr,
-                   &lightg,
-                   &lightb,
-                   &lightint) != 7) {
+                   &lightOnePosX,
+                   &lightOnePosY,
+                   &lightOnePosZ,
+                   &lightOneR,
+                   &lightOneG,
+                   &lightOneB,
+                   &lightOneIntense) != 7) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
         }
+        lightOne["color"] = vec3f(lightOneR, lightOneG, lightOneB);
+        lightOne["position"] = vec3f(lightOnePosX, lightOnePosY, lightOnePosZ);
+        lightOne["intensity"] = lightOneIntense;
+        lightOne["radius"] = 0.1f;
+
 
         fprintf(info, "Got request\n");
 
         /**
          * Here we need to make sure the specified objects are inside
-         * of the mapped actors. If the object is not, then we skip this request.
+         * of the mapped actors. If the object is not, then we skip this
+         * request.
          */
         auto objByName = namedActors.find(objOneName);
         if (objByName == namedActors.end()) {
-          fprintf(error, "Error: bad format, actor %s not in actor map.\n", objOneName.c_str());
+          fprintf(error,
+                  "Error: bad format, actor %s not in actor map.\n",
+                  objOneName.c_str());
           fflush(output);
           continue;
         }
         // This is the Node linked to the specified object name.
-        auto& specObjectOne = objByName->second;
-        specObjectOne->child("position").setValue(vec3f(objOnePosX, objOnePosY, objOnePosZ));
-        specObjectOne->child("scale").setValue(vec3f(objOneSklX, objOneSklY, objOneSklZ));
+        auto &specObjectOne = objByName->second;
+        specObjectOne->child("position")
+            .setValue(vec3f(objOnePosX, objOnePosY, objOnePosZ));
+        specObjectOne->child("scale").setValue(
+            vec3f(objOneSklX, objOneSklY, objOneSklZ));
 
         objByName = namedActors.find(objTwoName);
         if (objByName == namedActors.end()) {
-          fprintf(error, "Error: bad format, actor %s not in actor map.\n", objTwoName.c_str());
+          fprintf(error,
+                  "Error: bad format, actor %s not in actor map.\n",
+                  objTwoName.c_str());
           fflush(output);
           continue;
         }
-        auto& specObjectTwo = objByName->second;
-        specObjectTwo->child("position").setValue(vec3f(objTwoPosX, objTwoPosY, objTwoPosZ));
-        specObjectTwo->child("scale").setValue(vec3f(objTwoSklX, objTwoSklY, objTwoSklZ));
+        auto &specObjectTwo = objByName->second;
+        specObjectTwo->child("position")
+            .setValue(vec3f(objTwoPosX, objTwoPosY, objTwoPosZ));
+        specObjectTwo->child("scale").setValue(
+            vec3f(objTwoSklX, objTwoSklY, objTwoSklZ));
 
         objByName = namedActors.find(objThreeName);
         if (objByName == namedActors.end()) {
-          fprintf(error, "Error: bad format, actor %s not in actor map.\n", objThreeName.c_str());
+          fprintf(error,
+                  "Error: bad format, actor %s not in actor map.\n",
+                  objThreeName.c_str());
           fflush(output);
           continue;
         }
-        auto& specObjectThree = objByName->second;
-        specObjectThree->child("position").setValue(vec3f(objThreePosX, objThreePosY, objThreePosZ));
-        specObjectThree->child("scale").setValue(vec3f(objThreeSklX, objThreeSklY, objThreeSklZ));
+        auto &specObjectThree = objByName->second;
+        specObjectThree->child("position")
+            .setValue(vec3f(objThreePosX, objThreePosY, objThreePosZ));
+        specObjectThree->child("scale").setValue(
+            vec3f(objThreeSklX, objThreeSklY, objThreeSklZ));
 
         camera["pos"]    = vec3f(camPosX, camPosY, camPosZ);
         camera["up"]     = vec3f(camUpX, camUpY, camUpZ);
@@ -320,15 +386,9 @@ namespace ospray {
         camera["aspect"] = 1.0f;
         camera.commit();
 
-	sg::Node &light = lights.createChild("mylight", "PointLight");
-	light["color"] = vec3f(lightr, lightg, lightb);
-	light["position"] = vec3f(lightx, lighty, lightz);
-	light["intensity"] = lightint;
-	light["radius"] = 0.1f;
-
         // Render a single Frame
         std::shared_ptr<sg::FrameBuffer> fb =
-            std::make_shared<sg::FrameBuffer>(vec2i(quality, quality));
+            std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
         renderer["spp"]                            = 20;
@@ -369,14 +429,61 @@ namespace ospray {
         fbCapture->clear();
 
         // Reset the Spec Objects positions.
-        specObjectOne->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
-        specObjectTwo->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
-        specObjectThree->child("position").setValue(vec3f(-990.0f, -999.0f, -999.0f));
+        specObjectOne->child("position")
+            .setValue(vec3f(-990.0f, -999.0f, -999.0f));
+        specObjectTwo->child("position")
+            .setValue(vec3f(-990.0f, -999.0f, -999.0f));
+        specObjectThree->child("position")
+            .setValue(vec3f(-990.0f, -999.0f, -999.0f));
 
         specObjectOne->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
         specObjectTwo->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
         specObjectThree->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
 
+
+        // Reset the Spec Lights
+        /**
+         * LIGHT ONE
+         */
+        lightOne["color"] = vec3f(1.0f, 1.0f, 1.0f);
+        lightOne["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+        lightOne["intensity"] = 0.4f;
+        lightOne["radius"] = 0.1f;
+        /**
+         * LIGHT TWO
+         */
+        lightTwo["color"] = vec3f(1.0f, 1.0f, 1.0f);
+        lightTwo["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+        lightTwo["intensity"] = 0.4f;
+        lightTwo["radius"] = 0.1f;
+        /**
+         * LIGHT THREE
+         */
+        lightThree["color"] = vec3f(1.0f, 1.0f, 1.0f);
+        lightThree["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+        lightThree["intensity"] = 0.4f;
+        lightThree["radius"] = 0.1f;
+        /**
+         * LIGHT FOUR
+         */
+        lightFour["color"] = vec3f(1.0f, 1.0f, 1.0f);
+        lightFour["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+        lightFour["intensity"] = 0.4f;
+        lightFour["radius"] = 0.1f;
+        /**
+         * LIGHT FIVE
+         */
+        lightFive["color"] = vec3f(1.0f, 1.0f, 1.0f);
+        lightFive["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+        lightFive["intensity"] = 0.4f;
+        lightFive["radius"] = 0.1f;
+        /**
+         * LIGHT SIX
+         */
+        lightSix["color"] = vec3f(1.0f, 1.0f, 1.0f);
+        lightSix["position"] = vec3f(-999.0f, -999.0f, -999.0f);
+        lightSix["intensity"] = 0.4f;
+        lightSix["radius"] = 0.1f;
       }
       fclose(output);
     }  // namespace app
