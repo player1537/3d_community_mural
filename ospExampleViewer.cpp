@@ -329,7 +329,7 @@ namespace ospray {
 
         // Render a single Frame
         std::shared_ptr<sg::FrameBuffer> fb =
-            std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
+            std::make_shared<sg::FrameBuffer>(vec2i(quality, quality));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
         renderer["spp"]                            = 20;
