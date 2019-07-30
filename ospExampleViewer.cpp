@@ -175,7 +175,7 @@ namespace ospray {
         actor.second->child("position")
                 .setValue(vec3f(-999.0f, -999.0f, -999.0f));
         if (actorName == "GoldRoom"){
-          actor.second->child("position").setValue(vec3f(0.0f, -3.455323f, -9.2f));
+          actor.second->child("position").setValue(vec3f(0.0f, -3.455323f, -13.2f));
         }
       }
 
@@ -373,7 +373,7 @@ namespace ospray {
                   lightOne;
 
           light["color"] = vec3f(lightR, lightG, lightB);
-          light["position"] = vec3f(lightPosX, lightPosY - 3.455323f, lightPosZ - 9.2f);
+          light["position"] = vec3f(lightPosX, lightPosY - 3.455323f, lightPosZ - 13.2f);
           light["intensity"] = lightIntense;
           light["radius"] = lightRadius;
         }
@@ -397,7 +397,7 @@ namespace ospray {
         // This is the Node linked to the specified object name.
         auto &specObjectOne = objByName->second;
         specObjectOne->child("position")
-                .setValue(vec3f(objOnePosX, objOnePosY - 3.455323f, objOnePosZ - 9.2f));
+                .setValue(vec3f(objOnePosX, objOnePosY - 3.455323f, objOnePosZ - 13.2f));
         specObjectOne->child("scale").setValue(
                 vec3f(objOneSklX, objOneSklY, objOneSklZ));
         specObjectOne->child("rotation").setValue(vec3f(objOneRotX, objOneRotY, objOneRotZ));
@@ -412,7 +412,7 @@ namespace ospray {
         }
         auto &specObjectTwo = objByName->second;
         specObjectTwo->child("position")
-                .setValue(vec3f(objTwoPosX, objTwoPosY - 3.455323f, objTwoPosZ - 9.2f));
+                .setValue(vec3f(objTwoPosX, objTwoPosY - 3.455323f, objTwoPosZ - 13.2f));
         specObjectTwo->child("scale").setValue(
                 vec3f(objTwoSklX, objTwoSklY, objTwoSklZ));
         specObjectTwo->child("rotation").setValue(vec3f(objTwoRotX, objTwoRotY, objTwoRotZ));
@@ -428,7 +428,7 @@ namespace ospray {
         }
         auto &specObjectThree = objByName->second;
         specObjectThree->child("position")
-                .setValue(vec3f(objThreePosX, objThreePosY - 3.455323f, objThreePosZ - 9.2f));
+                .setValue(vec3f(objThreePosX, objThreePosY - 3.455323f, objThreePosZ - 13.2f));
         specObjectThree->child("scale").setValue(
                 vec3f(objThreeSklX, objThreeSklY, objThreeSklZ));
         specObjectThree->child("rotation").setValue(vec3f(objThreeRotX, objThreeRotY, objThreeRotZ));
