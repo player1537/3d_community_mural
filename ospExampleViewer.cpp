@@ -79,6 +79,10 @@ namespace ospray {
       }
       // Retrieve the Renderer's Children
       auto &renderer = root->child("renderer");
+      renderer.child("maxDepth").setValue(50);
+      renderer.child("minContribution").setValue(0.01f);
+      renderer.createChild("rouletteDepth", "int");
+      renderer.child("rouletteDepth").setValue(15);
       auto &world    = renderer.child("world");
       auto &lights   = renderer.child("lights");
 
@@ -120,7 +124,7 @@ namespace ospray {
 
       // Skip the World's Nodes that are not active actors in the scene
       std::vector<std::string> nodesToSkip{
-          "bounds", "compactMode", "dynamicScene", "robustMode"};
+              "bounds", "compactMode", "dynamicScene", "robustMode"};
 
       // Find the Active actors and store them separately
       std::map<std::string, std::shared_ptr<sg::Node>> sceneActors;
@@ -151,7 +155,7 @@ namespace ospray {
         printf("actor: %s as %s\n", actor.first.c_str(), actorName.c_str());
         namedActors.emplace(std::make_pair(actorName, actor.second));
         actor.second->child("position")
-            .setValue(vec3f(-999.0f, -999.0f, -999.0f));
+                .setValue(vec3f(-999.0f, -999.0f, -999.0f));
         if (actorName == "GoldRoom"){
           actor.second->child("position").setValue(vec3f(0.0f, 0.0f, 0.0f));
         }
@@ -164,16 +168,16 @@ namespace ospray {
       output = fopen("/dev/fd/100", "wb");
       while (true) {
         float camPosX, camPosY, camPosZ, camUpX, camUpY, camUpZ, camVuDirX,
-            camVuDirY, camVuDirZ;
+                camVuDirY, camVuDirZ;
         int quality;
         float objOnePosX, objOnePosY, objOnePosZ, objOneSklX, objOneSklY,
-            objOneSklZ;
+                objOneSklZ, objOneRotX, objOneRotY, objOneRotZ;
         int matid1;
         float objTwoPosX, objTwoPosY, objTwoPosZ, objTwoSklX, objTwoSklY,
-            objTwoSklZ;
+                objTwoSklZ, objTwoRotX, objTwoRotY, objTwoRotZ;
         int matid2;
         float objThreePosX, objThreePosY, objThreePosZ, objThreeSklX,
-            objThreeSklY, objThreeSklZ;
+                objThreeSklY, objThreeSklZ, objThreeRotX, objThreeRotY, objThreeRotZ;
         int matid3;
         char objid1[256], objid2[256], objid3[256];
         float negxr, negxg, negxb;
@@ -182,7 +186,7 @@ namespace ospray {
         float posyr, posyg, posyb;
         float negzr, negzg, negzb;
         float poszr, poszg, poszb;
-	int nlights;
+        int nlights;
         float lightPosX, lightPosY, lightPosZ;
         float lightR, lightG, lightB, lightIntense, lightRadius;
 
@@ -207,15 +211,18 @@ namespace ospray {
         }
 
         if (fscanf(input,
-                   "%f %f %f %f %f %f %d %s",
+                   "%f %f %f %f %f %f %f %f %f %d %s",
                    &objOnePosX,
                    &objOnePosY,
                    &objOnePosZ,
                    &objOneSklX,
                    &objOneSklY,
                    &objOneSklZ,
+                   &objOneRotX,
+                   &objOneRotY,
+                   &objOneRotZ,
                    &matid1,
-                   &objid1[0]) != 8) {
+                   &objid1[0]) != 11) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
@@ -224,15 +231,18 @@ namespace ospray {
         std::string objOneName = objid1;
 
         if (fscanf(input,
-                   "%f %f %f %f %f %f %d %s",
+                   "%f %f %f %f %f %f %f %f %f %d %s",
                    &objTwoPosX,
                    &objTwoPosY,
                    &objTwoPosZ,
                    &objTwoSklX,
                    &objTwoSklY,
                    &objTwoSklZ,
+                   &objTwoRotX,
+                   &objTwoRotY,
+                   &objTwoRotZ,
                    &matid2,
-                   &objid2[0]) != 8) {
+                   &objid2[0]) != 11) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
@@ -241,15 +251,18 @@ namespace ospray {
         std::string objTwoName = objid2;
 
         if (fscanf(input,
-                   "%f %f %f %f %f %f %d %s",
+                   "%f %f %f %f %f %f %f %f %f %d %s",
                    &objThreePosX,
                    &objThreePosY,
                    &objThreePosZ,
                    &objThreeSklX,
                    &objThreeSklY,
                    &objThreeSklZ,
+                   &objThreeRotX,
+                   &objThreeRotY,
+                   &objThreeRotZ,
                    &matid3,
-                   &objid3[0]) != 8) {
+                   &objid3[0]) != 11) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
@@ -314,9 +327,9 @@ namespace ospray {
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
-	}
+        }
 
-	for (int i=0; i<nlights; ++i) {
+        for (int i=0; i<nlights; ++i) {
           if (fscanf(input,
                      "%f %f %f %f %f %f %f %f",
                      &lightPosX,
@@ -326,26 +339,26 @@ namespace ospray {
                      &lightG,
                      &lightB,
                      &lightIntense,
-		     &lightRadius) != 8) {
+                     &lightRadius) != 8) {
             fprintf(error, "Error: bad format\n");
             fprintf(output, "9:error arg,");
             fflush(output);
             continue;
           }
-	  sg::Node &light = 
-	  	i == 0 ? lightOne :
-		i == 1 ? lightTwo :
-		i == 2 ? lightThree :
-		i == 3 ? lightFour :
-		i == 4 ? lightFive :
-		i == 5 ? lightSix :
-		lightOne;
+          sg::Node &light =
+                  i == 0 ? lightOne :
+                  i == 1 ? lightTwo :
+                  i == 2 ? lightThree :
+                  i == 3 ? lightFour :
+                  i == 4 ? lightFive :
+                  i == 5 ? lightSix :
+                  lightOne;
 
           light["color"] = vec3f(lightR, lightG, lightB);
           light["position"] = vec3f(lightPosX, lightPosY, lightPosZ);
           light["intensity"] = lightIntense;
           light["radius"] = lightRadius;
-	}
+        }
 
 
         fprintf(info, "Got request\n");
@@ -366,9 +379,10 @@ namespace ospray {
         // This is the Node linked to the specified object name.
         auto &specObjectOne = objByName->second;
         specObjectOne->child("position")
-            .setValue(vec3f(objOnePosX, objOnePosY, objOnePosZ));
+                .setValue(vec3f(objOnePosX, objOnePosY, objOnePosZ));
         specObjectOne->child("scale").setValue(
-            vec3f(objOneSklX, objOneSklY, objOneSklZ));
+                vec3f(objOneSklX, objOneSklY, objOneSklZ));
+        specObjectOne->child("rotation").setValue(vec3f(objOneRotX, objOneRotY, objOneRotZ));
 
         objByName = namedActors.find(objTwoName);
         if (objByName == namedActors.end()) {
@@ -380,9 +394,11 @@ namespace ospray {
         }
         auto &specObjectTwo = objByName->second;
         specObjectTwo->child("position")
-            .setValue(vec3f(objTwoPosX, objTwoPosY, objTwoPosZ));
+                .setValue(vec3f(objTwoPosX, objTwoPosY, objTwoPosZ));
         specObjectTwo->child("scale").setValue(
-            vec3f(objTwoSklX, objTwoSklY, objTwoSklZ));
+                vec3f(objTwoSklX, objTwoSklY, objTwoSklZ));
+        specObjectTwo->child("rotation").setValue(vec3f(objTwoRotX, objTwoRotY, objTwoRotZ));
+
 
         objByName = namedActors.find(objThreeName);
         if (objByName == namedActors.end()) {
@@ -394,9 +410,11 @@ namespace ospray {
         }
         auto &specObjectThree = objByName->second;
         specObjectThree->child("position")
-            .setValue(vec3f(objThreePosX, objThreePosY, objThreePosZ));
+                .setValue(vec3f(objThreePosX, objThreePosY, objThreePosZ));
         specObjectThree->child("scale").setValue(
-            vec3f(objThreeSklX, objThreeSklY, objThreeSklZ));
+                vec3f(objThreeSklX, objThreeSklY, objThreeSklZ));
+        specObjectThree->child("rotation").setValue(vec3f(objThreeRotX, objThreeRotY, objThreeRotZ));
+
 
         camera["pos"]    = vec3f(camPosX, camPosY, camPosZ);
         camera["up"]     = vec3f(camUpX, camUpY, camUpZ);
@@ -407,14 +425,14 @@ namespace ospray {
 
         // Render a single Frame
         std::shared_ptr<sg::FrameBuffer> fb =
-            std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
+                std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
         renderer["spp"]                            = 20;
         std::shared_ptr<sg::FrameBuffer> fbCapture = root->renderFrame(true);
         auto fbSize                                = fbCapture->size();
-	const void *pixels = fbCapture->map(OSP_FB_COLOR);
-	size_t pixelsSize = (size_t)fbSize.x * (size_t)fbSize.y * (size_t)4;
+        const void *pixels = fbCapture->map(OSP_FB_COLOR);
+        size_t pixelsSize = (size_t)fbSize.x * (size_t)fbSize.y * (size_t)4;
 
         fprintf(output, "%lu:", pixelsSize * sizeof(uint8_t));
         fwrite(pixels, sizeof(uint8_t), pixelsSize, output);
@@ -422,17 +440,21 @@ namespace ospray {
         fflush(output);
         fbCapture->clear();
 
-        // Reset the Spec Objects positions.
+        // Reset the Spec Objects positions, scales and rots.
         specObjectOne->child("position")
-            .setValue(vec3f(-990.0f, -999.0f, -999.0f));
+                .setValue(vec3f(-990.0f, -999.0f, -999.0f));
         specObjectTwo->child("position")
-            .setValue(vec3f(-990.0f, -999.0f, -999.0f));
+                .setValue(vec3f(-990.0f, -999.0f, -999.0f));
         specObjectThree->child("position")
-            .setValue(vec3f(-990.0f, -999.0f, -999.0f));
+                .setValue(vec3f(-990.0f, -999.0f, -999.0f));
 
         specObjectOne->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
         specObjectTwo->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
         specObjectThree->child("scale").setValue(vec3f(1.0f, 1.0f, 1.0f));
+
+        specObjectOne->child("rotation").setValue(vec3f(0.0f, 0.0f, 0.0f));
+        specObjectTwo->child("rotation").setValue(vec3f(0.0f, 0.0f, 0.0f));
+        specObjectThree->child("rotation").setValue(vec3f(0.0f, 0.0f, 0.0f));
 
 
         // Reset the Spec Lights
