@@ -413,36 +413,11 @@ namespace ospray {
         renderer["spp"]                            = 20;
         std::shared_ptr<sg::FrameBuffer> fbCapture = root->renderFrame(true);
         auto fbSize                                = fbCapture->size();
-        auto fbColour = (vec4uc *)fbCapture->map(OSP_FB_COLOR);
+	const void *pixels = fbCapture->map(OSP_FB_COLOR);
+	size_t pixelsSize = (size_t)fbSize.x * (size_t)fbSize.y * (size_t)4;
 
-        // Capture the rendered frame to a buffer
-        std::vector<unsigned char> rgbAsUnsChars;
-        int index = 0;
-        for (int row = fbSize.y - 1; row >= 0; --row) {
-          for (int col = 0; col < fbSize.x; ++col) {
-            index = row * fbSize.x + col;
-            rgbAsUnsChars.push_back((unsigned char)(fbColour[index].x));
-            rgbAsUnsChars.push_back((unsigned char)(fbColour[index].y));
-            rgbAsUnsChars.push_back((unsigned char)(fbColour[index].z));
-          }
-        }
-
-        ContextCaptureStruct captureStruct;
-        int ret = stbi_write_jpg_to_func(jpgWriteHelp,
-                                         (void *)&captureStruct,
-                                         fbSize.x,
-                                         fbSize.y,
-                                         3,
-                                         &rgbAsUnsChars[0],
-                                         100);
-        if (!ret) {
-          printf("bad\n");
-          break;
-        }
-
-        fprintf(output, "%lu:", captureStruct.bytes.size());
-        fwrite(
-            captureStruct.bytes.data(), 1, captureStruct.bytes.size(), output);
+        fprintf(output, "%lu:", pixelsSize * sizeof(uint8_t));
+        fwrite(pixels, sizeof(uint8_t), pixelsSize, output);
         fprintf(output, ",");
         fflush(output);
         fbCapture->clear();

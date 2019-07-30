@@ -233,6 +233,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		tiling = options.get('tiling', '0-1')
 		tile_index, num_tiles = tiling.split('-')
 		tile_index = int(tile_index)
+		bgcolor = tuple(map(int, options.get('bgcolor', '255-255-255-255').split('-')))
 		num_tiles = int(num_tiles)
 		n_cols = int(sqrt(num_tiles))
 		assert bx1 is not None and by1 is not None and bz1 is not None, f'{bx1!r} {by1!r} {bz1!r}'
@@ -273,15 +274,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		
 		if b'error' in data:
 			print(data)
-		
-		#image = Image.frombytes('RGBX', (quality, quality), data, 'raw', 'RGBX', 0, -1)
-		#buffer = BytesIO()
-		#image.save(buffer, 'JPEG')
-		
-		#content = buffer.getvalue()
-		content = data
 
-		self.send('image/jpeg', content)
+		image = Image.frombytes('RGBA', (quality, quality), data, 'raw', 'RGBA', 0, -1)
+		canvas = Image.new('RGBA', image.size, bgcolor)
+		canvas.paste(image, mask=image)
+		buffer = BytesIO()
+		canvas.save(buffer, 'PNG')
+		
+		content = buffer.getvalue()
+
+		self.send('image/png', content)
 	
 	def send(self, content_type, content):
 		connection = self.headers['connection']
