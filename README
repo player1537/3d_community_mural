@@ -136,6 +136,9 @@ function makeMuralURL(options) {
 		makeMuralWall(O.posz),
 		lightParts.join(','),
 	];
+
+	const extraParts = [];
+	if (O.bgcolor) extraParts.push('bgcolor', bgcolor.join(','));
 	
 	return makeTapestryURL({
 		prefix: 'http://accona.eecs.utk.edu:8801',
@@ -146,7 +149,7 @@ function makeMuralURL(options) {
 		ux: 0, uy: 1, uz: 0,
 		vx: 0, vy: 0, vz: 1,
 		quality: O.quality,
-		extra: '',
+		extra: extraParts.join(','),
 	});
 }
 
@@ -209,11 +212,12 @@ const url = makeMuralURL({
 			intensity: 10.0,
 		},
 	],
+	bgcolor: [255, 0, 0, 255],
 });
 
 This results in:
 
-  http://accona.eecs.utk.edu:8801/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass,negx,0.8,0.2,0.2,posx,0.2,0.8,0.2,negy,0.2,0.8,0.8,posy,0.8,0.8,0.8,negz,0.8,0.2,0.8,posz,0.2,0.2,0.8,light,0.0,0.9,0.5,0.8,0.1,0.1,10.0/0/0/-2/0/1/0/0/0/1/512/
+  http://accona.eecs.utk.edu:8801/image/scene,obj1,Donut,0,0,0.5,1,2,1,Emerald,obj2,Platonic,0.5,0,0.5,1,2,1,Emerald,obj3,Donut,0,0.5,0.5,1,2,1,Brass,negx,0.8,0.2,0.2,posx,0.2,0.8,0.2,negy,0.2,0.8,0.8,posy,0.8,0.8,0.8,negz,0.8,0.2,0.8,posz,0.2,0.2,0.8,light,0.0,0.9,0.5,0.8,0.1,0.1,10.0/0/0/-2/0/1/0/0/0/1/512/bgcolor,255-0-0-255
 
 The scene has a fixed size and has limits on X, Y, and Z. Anything
 (camera or ball) can be put anywhere in this fixed space, but going
@@ -370,6 +374,30 @@ const baseObject = {
 const obj1 = Object.assign({}, baseObject, {
 	number: 1,
 });
+
+
+Background Color
+----------------
+
+Some renders do come back with transparent sections. Because we want
+fully opaque images, we need to substitute a background color for all
+transparent sections. To fascilitate this, there's now a control to
+change this background color.
+
+This goes in the "extra" section at the end of the URL and looks like:
+
+  http://hostname:port/scene,.../X/Y/Z/UX/UY/UZ/VX/VY/VZ/SIZE/bgcolor,R-G-B-A
+
+Here R, G, B, and A are integers from 0 to 255. For instance, solid
+white (the default if you don't pass anything) is:
+
+  bgcolor,255-255-255-255
+
+Solid red would be:
+
+  bgcolor,255-0-0-255
+
+And so on.
 
 
 Miscellaneous Notes
