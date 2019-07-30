@@ -182,8 +182,9 @@ namespace ospray {
         float posyr, posyg, posyb;
         float negzr, negzg, negzb;
         float poszr, poszg, poszb;
-        float lightOnePosX, lightOnePosY, lightOnePosZ;
-        float lightOneR, lightOneG, lightOneB, lightOneIntense;
+	int nlights;
+        float lightPosX, lightPosY, lightPosZ;
+        float lightR, lightG, lightB, lightIntense;
 
         fprintf(info, "Waiting for request...\n");
 
@@ -308,24 +309,42 @@ namespace ospray {
          *
          */
 
-        if (fscanf(input,
-                   "%f %f %f %f %f %f %f",
-                   &lightOnePosX,
-                   &lightOnePosY,
-                   &lightOnePosZ,
-                   &lightOneR,
-                   &lightOneG,
-                   &lightOneB,
-                   &lightOneIntense) != 7) {
+        if (fscanf(input, "%d ", &nlights) != 1) {
           fprintf(error, "Error: bad format\n");
           fprintf(output, "9:error arg,");
           fflush(output);
           continue;
-        }
-        lightOne["color"] = vec3f(lightOneR, lightOneG, lightOneB);
-        lightOne["position"] = vec3f(lightOnePosX, lightOnePosY, lightOnePosZ);
-        lightOne["intensity"] = lightOneIntense;
-        lightOne["radius"] = 0.1f;
+	}
+
+	for (int i=0; i<nlights; ++i) {
+          if (fscanf(input,
+                     "%f %f %f %f %f %f %f",
+                     &lightPosX,
+                     &lightPosY,
+                     &lightPosZ,
+                     &lightR,
+                     &lightG,
+                     &lightB,
+                     &lightIntense) != 7) {
+            fprintf(error, "Error: bad format\n");
+            fprintf(output, "9:error arg,");
+            fflush(output);
+            continue;
+          }
+	  sg::Node &light = 
+	  	i == 0 ? lightOne :
+		i == 1 ? lightTwo :
+		i == 2 ? lightThree :
+		i == 3 ? lightFour :
+		i == 4 ? lightFive :
+		i == 5 ? lightSix :
+		lightOne;
+
+          light["color"] = vec3f(lightR, lightG, lightB);
+          light["position"] = vec3f(lightPosX, lightPosY, lightPosZ);
+          light["intensity"] = lightIntense;
+          light["radius"] = 0.1f;
+	}
 
 
         fprintf(info, "Got request\n");
