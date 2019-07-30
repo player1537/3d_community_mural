@@ -135,10 +135,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		bx1 = by1 = bz1 = None
 		bx2 = by2 = bz2 = None
 		bx3 = by3 = bz3 = None
-		
+
 		bsx1 = bsy1 = bsz1 = None
 		bsx2 = bsy2 = bsz2 = None
 		bsx3 = bsy3 = bsz3 = None
+		
+		brx1 = bry1 = brz1 = None
+		brx2 = bry2 = brz2 = None
+		brx3 = bry3 = brz3 = None
 		
 		matid1 = matid2 = matid3 = None
 		objid1 = objid2 = objid3 = None
@@ -166,6 +170,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsx1 = float(next(it))
 					bsy1 = float(next(it))
 					bsz1 = float(next(it))
+					brx1 = float(next(it))
+					bry1 = float(next(it))
+					brz1 = float(next(it))
 					matid1 = _g_materials.lookup(next(it))
 				elif k == 'obj2':
 					objid2 = str(next(it)).encode("utf8")
@@ -175,6 +182,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsx2 = float(next(it))
 					bsy2 = float(next(it))
 					bsz2 = float(next(it))
+					brx2 = float(next(it))
+					bry2 = float(next(it))
+					brz2 = float(next(it))
 					matid2 = _g_materials.lookup(next(it))
 				elif k == 'obj3':
 					objid3 = str(next(it)).encode("utf8")
@@ -184,6 +194,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 					bsx3 = float(next(it))
 					bsy3 = float(next(it))
 					bsz3 = float(next(it))
+					brx3 = float(next(it))
+					bry3 = float(next(it))
+					brz3 = float(next(it))
 					matid3 = _g_materials.lookup(next(it))
 				elif k == 'negx':
 					negxr = float(next(it))
@@ -240,9 +253,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 		
 		query = (
 			b'%f %f %f %f %f %f %f %f %f %d '
-			b'%f %f %f %f %f %f %d %s '
-			b'%f %f %f %f %f %f %d %s '
-			b'%f %f %f %f %f %f %d %s '
+			b'%f %f %f %f %f %f %f %f %f %d %s '
+			b'%f %f %f %f %f %f %f %f %f %d %s '
+			b'%f %f %f %f %f %f %f %f %f %d %s '
 			b'%f %f %f '
 			b'%f %f %f '
 			b'%f %f %f '
@@ -252,9 +265,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
 			b'%d %s '
 		) % (
 			x, y, z, ux, uy, uz, vx, vy, vz, quality,
-			bx1, by1, bz1, bsx1, bsy1, bsz1, matid1, objid1,
-			bx2, by2, bz2, bsx2, bsy2, bsz2, matid2, objid2,
-			bx3, by3, bz3, bsx3, bsy3, bsz3, matid3, objid3,
+			bx1, by1, bz1, bsx1, bsy1, bsz1, brx1, bry1, brz1, matid1, objid1,
+			bx2, by2, bz2, bsx2, bsy2, bsz2, brx2, bry2, brz2, matid2, objid2,
+			bx3, by3, bz3, bsx3, bsy3, bsz3, brx3, bry3, brz3, matid3, objid3,
 			negxr, negxg, negxb,
 			posxr, posxg, posxb,
 			negyr, negyg, negyb,
