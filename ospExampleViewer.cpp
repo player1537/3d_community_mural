@@ -18,7 +18,6 @@
 #include "sg/geometry/TriangleMesh.h"
 
 #include "ospapp/OSPApp.h"
-#include "widgets/imguiViewer.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "sg/3rdParty/stb_image_write.h"
