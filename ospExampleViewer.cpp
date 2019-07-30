@@ -157,7 +157,7 @@ namespace ospray {
         actor.second->child("position")
                 .setValue(vec3f(-999.0f, -999.0f, -999.0f));
         if (actorName == "GoldRoom"){
-          actor.second->child("position").setValue(vec3f(0.0f, 0.0f, 0.0f));
+          actor.second->child("position").setValue(vec3f(0.0f, -3.455323f, -9.2f));
         }
       }
 
@@ -428,7 +428,7 @@ namespace ospray {
                 std::make_shared<sg::FrameBuffer>(vec2i(512, 512));
         root->setChild("frameBuffer", fb);
         root->setChild("navFrameBuffer", fb);
-        renderer["spp"]                            = 20;
+        renderer["spp"]                            = 60;
         std::shared_ptr<sg::FrameBuffer> fbCapture = root->renderFrame(true);
         auto fbSize                                = fbCapture->size();
         const void *pixels = fbCapture->map(OSP_FB_COLOR);
